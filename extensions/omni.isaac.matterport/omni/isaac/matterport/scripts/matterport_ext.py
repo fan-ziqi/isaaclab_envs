@@ -1,9 +1,9 @@
 #!/usr/bin/python
 """
 @author     Pascal Roth
-@email      rothpa@student.ethz.ch
+@email      rothpa@ethz.ch
 
-@brief     MatterPort3D Extension in Omniverse-Isaac Sim
+@brief      MatterPort3D Extension in Omniverse-Isaac Sim
 """
 
 import asyncio
@@ -28,7 +28,11 @@ from omni.isaac.matterport.semantics import CameraData, MatterportCallbackDomain
 from omni.isaac.matterport.test import test_depth_warp
 
 # omni-isaac-matterport
-from omni.isaac.matterport.utils import MatterportWorld
+from .matterport_importer import MatterportImporter
+from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
+from omni.isaac.orbit.envs.base_env import BaseEnv, BaseEnvCfg
+from omni.isaac.orbit.sim import SimulationContext, SimulationCfg
+import omni.isaac.core.utils.stage as stage_utils
 
 # omni-isaac-ui
 from omni.isaac.ui.ui_utils import (
@@ -157,24 +161,24 @@ class MatterPortExtension(omni.ext.IExt):
                 # PhysicsMaterial
                 self._input_fields["friction_dynamic"] = float_builder(
                     "Dynamic Friction",
-                    default_val=self._config.friction_dynamic,
-                    tooltip=f"Sets the dyanmic friction of the physics material (default: {self._config.friction_dynamic})",
+                    default_val=self._config.importer.physics_material.dynamic_friction,
+                    tooltip=f"Sets the dyanmic friction of the physics material (default: {self._config.importer.physics_material.dynamic_friction})",
                 )
                 self._input_fields["friction_dynamic"].add_value_changed_fn(
                     lambda m, config=self._config: config.set_friction_dynamic(m.get_value_as_float())
                 )
                 self._input_fields["friction_static"] = float_builder(
                     "Static Friction",
-                    default_val=self._config.friction_static,
-                    tooltip=f"Sets the static friction of the physics material (default: {self._config.friction_static})",
+                    default_val=self._config.importer.physics_material.static_friction,
+                    tooltip=f"Sets the static friction of the physics material (default: {self._config.importer.physics_material.static_friction})",
                 )
                 self._input_fields["friction_static"].add_value_changed_fn(
                     lambda m, config=self._config: config.set_friction_static(m.get_value_as_float())
                 )
                 self._input_fields["restitution"] = float_builder(
                     "Restitution",
-                    default_val=self._config.restitution,
-                    tooltip=f"Sets the restitution of the physics material (default: {self._config.restitution})",
+                    default_val=self._config.importer.physics_material.restitution,
+                    tooltip=f"Sets the restitution of the physics material (default: {self._config.importer.physics_material.restitution})",
                 )
                 self._input_fields["restitution"].add_value_changed_fn(
                     lambda m, config=self._config: config.set_restitution(m.get_value_as_float())
@@ -182,33 +186,29 @@ class MatterPortExtension(omni.ext.IExt):
                 dropdown_builder(
                     "Friction Combine Mode",
                     items=["average", "min", "multiply", "max"],
-                    default_val=self._config.friction_combine_mode,
-                    on_clicked_fn=lambda i, config=self._config: config.set_friction_combine_mode(
-                        0 if i == "average" else (1 if i == "min" else (2 if i == "multiply" else 3))
-                    ),
-                    tooltip="Sets the friction combine mode of the physics material (default: max)",
+                    default_val=self._config.importer.physics_material.friction_combine_mode,
+                    on_clicked_fn=lambda mode_str, config=self._config: config.set_friction_combine_mode(mode_str),
+                    tooltip=f"Sets the friction combine mode of the physics material (default: {self._config.importer.physics_material.friction_combine_mode})",
                 )
                 dropdown_builder(
                     "Restitution Combine Mode",
                     items=["average", "min", "multiply", "max"],
-                    default_val=self._config.restitution_combine_mode,
-                    on_clicked_fn=lambda i, config=self._config: config.set_restitution_combine_mode(
-                        0 if i == "average" else (1 if i == "min" else (2 if i == "multiply" else 3))
-                    ),
-                    tooltip="Sets the friction combine mode of the physics material (default: max)",
+                    default_val=self._config.importer.physics_material.restitution_combine_mode,
+                    on_clicked_fn=lambda mode_str, config=self._config: config.set_restitution_combine_mode(mode_str),
+                    tooltip=f"Sets the friction combine mode of the physics material (default: {self._config.importer.physics_material.restitution_combine_mode})",
                 )
                 cb_builder(
                     label="Improved Patch Friction",
-                    tooltip=f"Sets the improved patch friction of the physics material (default: {self._config.improved_patch_friction})",
+                    tooltip=f"Sets the improved patch friction of the physics material (default: {self._config.importer.physics_material.improve_patch_friction})",
                     on_clicked_fn=lambda m, config=self._config: config.set_improved_patch_friction(m),
-                    default_val=self._config.improved_patch_friction,
+                    default_val=self._config.importer.physics_material.improve_patch_friction,
                 )
 
                 # Set prim path for environment
                 self._input_fields["prim_path"] = str_builder(
                     "Prim Path of the Environment",
                     tooltip="Prim path of the environment",
-                    default_val=self._config.prim_path,
+                    default_val=self._config.importer.prim_path,
                 )
                 self._input_fields["prim_path"].add_value_changed_fn(
                     lambda m, config=self._config: config.set_prim_path(m.get_value_as_string())
@@ -227,7 +227,7 @@ class MatterPortExtension(omni.ext.IExt):
 
                 kwargs = {
                     "label": "Input File",
-                    "default_val": self._config.import_file_obj,
+                    "default_val": self._config.importer.import_file_obj,
                     "tooltip": "Click the Folder Icon to Set Filepath",
                     "use_folder_picker": True,
                     "item_filter_fn": on_filter_obj_item,
@@ -240,7 +240,7 @@ class MatterPortExtension(omni.ext.IExt):
                 self._input_fields["input_file"].add_value_changed_fn(check_file_type)
 
                 self._input_fields["import_btn"] = btn_builder(
-                    "Import", text="Import", on_clicked_fn=self._load_matterport3d
+                    "Import", text="Import", on_clicked_fn=self._start_loading
                 )
                 self._input_fields["import_btn"].enabled = False
 
@@ -255,7 +255,7 @@ class MatterPortExtension(omni.ext.IExt):
 
                 kwargs = {
                     "label": "Input ply File",
-                    "default_val": self._config.import_file_ply,
+                    "default_val": self._config.importer.import_file_ply,
                     "tooltip": "Click the Folder Icon to Set Filepath",
                     "use_folder_picker": True,
                     "item_filter_fn": on_filter_ply_item,
@@ -266,17 +266,11 @@ class MatterPortExtension(omni.ext.IExt):
                 }
                 self._input_fields["input_ply_file"] = str_builder(**kwargs)
                 self._input_fields["input_ply_file"].add_value_changed_fn(check_file_type_ply)
-
-                # final button to load semantics
-                self._input_fields["import_ply_btn"] = btn_builder(
-                    "Import", text="Import", on_clicked_fn=self._load_domains
-                )
-                self._input_fields["import_ply_btn"].enabled = False
         return
 
     def _build_camera_ui(self):
         frame = ui.CollapsableFrame(
-            title="Domains",
+            title="Add Camera",
             height=0,
             collapsed=False,
             style=get_style(),
@@ -286,59 +280,39 @@ class MatterPortExtension(omni.ext.IExt):
         )
         with frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
-                # control parameters
-                cb_builder(
+                # data fields parameters
+                self._input_fields["camera_semantics"] = cb_builder(
                     label="Enable Semantics",
-                    tooltip=f"Enable access to the semantics information of the mesh (default: {self._config.semantic})",
-                    on_clicked_fn=lambda m, config=self._config: config.set_semantic(m),
-                    default_val=self._config.semantic,
+                    tooltip="Enable access to the semantics information of the mesh (default: True)",
+                    default_val=True,
                 )
-                cb_builder(
-                    label="Enable Depth",
-                    tooltip=f"Enable access to the depth information of the mesh - no additional compute effort (default: {self._config.depth})",
-                    on_clicked_fn=lambda m, config=self._config: config.set_depth(m),
-                    default_val=self._config.depth,
-                )
-                cb_builder(
-                    label="Enable RGB",
-                    tooltip=f"Enable access to the rgb information of the mesh - no additional compute effort (default: {self._config.rgb})",
-                    on_clicked_fn=lambda m, config=self._config: config.set_rgb(m),
-                    default_val=self._config.rgb,
-                )
-
-                cb_builder(
-                    label="Visualization",
-                    tooltip=f"Visualize Semantics and/or Depth (default: {self._config.visualize})",
-                    on_clicked_fn=lambda m, config=self._config: config.set_visualize(m),
-                    default_val=self._config.visualize,
+                self._input_fields["camera_depth"] = cb_builder(
+                    label="Enable Distance to Camera Frame",
+                    tooltip="Enable access to the depth information of the mesh - no additional compute effort (default: True)",
+                    default_val=True,
                 )
 
                 # add camera sensor for which semantics and depth should be rendered
-                kwargs = {  # TODO: make dropdown or MultiStringField
+                kwargs = {
                     "label": "Camera Prim Path",
                     "type": "stringfield",
                     "default_val": "",
                     "tooltip": "Enter Camera Prim Path",
                     "use_folder_picker": False,
                 }
-                self._input_fields["camera"] = str_builder(**kwargs)
-                self._input_fields["camera"].add_value_changed_fn(self._check_cam_prim)
+                self._input_fields["camera_prim"] = str_builder(**kwargs)
+                self._input_fields["camera_prim"].add_value_changed_fn(self._check_cam_prim)
 
                 self._input_fields["cam_height"] = int_builder(
                     "Camera Height in Pixels",
                     default_val=CameraData.get_default_height(),
                     tooltip=f"Set the height of the camera image plane in pixels (default: {CameraData.get_default_height()})",
                 )
-                self._input_fields["cam_height"].add_value_changed_fn(
-                    lambda m, config=self._config: config.set_compute_frequency(m.get_value_as_int())
-                )
+
                 self._input_fields["cam_width"] = int_builder(
                     "Camera Width in Pixels",
                     default_val=CameraData.get_default_width(),
                     tooltip=f"Set the width of the camera image plane in pixels (default: {CameraData.get_default_width()})",
-                )
-                self._input_fields["cam_width"].add_value_changed_fn(
-                    lambda m, config=self._config: config.set_compute_frequency(m.get_value_as_int())
                 )
 
                 self._input_fields["load_camera"] = btn_builder(
@@ -349,7 +323,7 @@ class MatterPortExtension(omni.ext.IExt):
 
     def _build_writer_ui(self):
         frame = ui.CollapsableFrame(
-            title="Writer",
+            title="Writer and Visuaization",
             height=0,
             collapsed=False,
             style=get_style(),
@@ -359,6 +333,13 @@ class MatterPortExtension(omni.ext.IExt):
         )
         with frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
+                cb_builder(
+                    label="Visualization",
+                    tooltip=f"Visualize Semantics and/or Depth (default: {self._config.visualize})",
+                    on_clicked_fn=lambda m, config=self._config: config.set_visualize(m),
+                    default_val=self._config.visualize,
+                )                
+                
                 # control parameters
                 self._input_fields["compute_frequency"] = int_builder(
                     "Compute Frequency",
@@ -469,12 +450,7 @@ class MatterPortExtension(omni.ext.IExt):
 
     def _check_cam_prim(self, path) -> None:
         # check if prim exists
-        if not prim_utils.is_prim_path_valid(path.get_value_as_string()):
-            carb.log_verbose(f"Invalid prim path: {path.get_value_as_string()}")
-        elif path.get_value_as_string() in self.camera_list:
-            carb.log_warn(f"Annotators already generated for this camera: {path.get_value_as_string()}")
-        else:
-            self._input_fields["load_camera"].enabled = True
+        self._input_fields["load_camera"].enabled = True
         return
 
     # FIXME: currently cannot set value because of read-only property
@@ -505,7 +481,29 @@ class MatterPortExtension(omni.ext.IExt):
     # Load Mesh and Point-Cloud
     ##
 
-    def _load_matterport3d(self) -> None:
+    async def load_matterport(self):
+        # create new stage
+        await stage_utils.create_new_stage_async()
+
+        # simulation settings
+        # check if simulation context was created earlier or not.
+        if SimulationContext.instance():
+            SimulationContext.clear_instance()
+            carb.log_warn("SimulationContext already loaded. Will clear now and init default SimulationContext")
+
+        # create new simulation context
+        self.sim = SimulationContext(SimulationCfg())
+        # initialize simulation
+        await self.sim.initialize_simulation_context_async()
+        # load matterport
+        await self._matterport.load_world_async()
+
+        # reset the simulator
+        # note: this plays the simulator which allows setting up all the physics handles.
+        await self.sim.reset_async()
+        await self.sim.pause_async()
+
+    def _start_loading(self):
         path = self._config.import_file_obj
         if not path:
             return
@@ -520,38 +518,16 @@ class MatterPortExtension(omni.ext.IExt):
                 file_path
             ), f"No .obj or .usd file found under relative path to extension data: {file_path}"
             self._config.set_import_file_obj(file_path)  # update config
-
         carb.log_verbose("MatterPort 3D Mesh found, start loading...")
-
-        # matterport class
-        self._matterport = MatterportWorld(self._config)
-        asyncio.ensure_future(self._matterport.load_world_async())
+        
+        self._matterport = MatterportImporter(self._config.importer)
+        asyncio.ensure_future(self.load_matterport())
 
         carb.log_info("MatterPort 3D Mesh loaded")
         self._input_fields["import_btn"].enabled = False
-        return
-
-    def _load_domains(self):
-        path = self._config.import_file_ply
-        if not isinstance(path, str):
-            path = path.get_value_as_string()
-
-        # find ply, usd file
-        if os.path.isabs(path):
-            file_path = path
-            assert os.path.isfile(file_path), f"No .ply file found under absolute path: {file_path}"
-        else:
-            file_path = os.path.join(self._extension_path, "data", path)
-            assert os.path.isfile(file_path), f"No .ply file found under relative path to extension data: {file_path}"
-            self._config.set_import_file_ply(file_path)  # update config
-
-        self.domains = MatterportWarp(self._config)
-
-        self._input_fields["import_ply_btn"].enabled = False
         self._input_fields["explorer"].enabled = True
         self._input_fields["annotator_callback"].enabled = True
         self._input_fields["test"].enabled = True
-        carb.log_info("MatterPort 3D Semantics Callback successfully loaded!")
         return
 
     ##
@@ -559,31 +535,42 @@ class MatterPortExtension(omni.ext.IExt):
     ##
 
     def _register_camera(self):
-        path = self._input_fields["camera"].get_value_as_string()
+        camera_path = self._input_fields["camera_prim"].get_value_as_string()
+        camera_semantics = self._input_fields["camera_semantics"].get_value_as_bool()
+        camera_depth = self._input_fields["camera_depth"].get_value_as_bool()
+        camera_width = self._input_fields["cam_width"].get_value_as_int()
+        camera_height = self._input_fields["cam_height"].get_value_as_int()
 
-        # check that prim path is Camera by trying to get typical camera attribute
-        prim = prim_utils.get_prim_at_path(path)
-        if not prim.GetAttribute("focalLength").IsValid():
-            carb.log_warn(f"Prim {path} is not a camera! Please select a valid camera.")
-            return
-
-        # register camera
-        self.domains.register_camera(
-            prim,
-            height=self._input_fields["cam_height"].get_value_as_int(),
-            width=self._input_fields["cam_width"].get_value_as_int(),
-            semantics=self._config.semantic,
-            depth=self._config.depth,
-            rgb=self._config.rgb,
-            visualization=self._config.visualize,
+        # Setup camera sensor
+        data_types = []
+        if camera_semantics:
+            data_types += ["semantic_segmentation"]
+        if camera_depth:
+            data_types += ["distance_to_image_plane"]
+        
+        camera_pattern_cfg = patterns.PinholeCameraPatternCfg(
+            focal_length=24.0,
+            horizontal_aperture=20.955,
+            height=camera_height,
+            width=camera_width,
+            data_types=data_types
+        )
+        camera_cfg = RayCasterCfg(
+            prim_path=camera_path,
+            mesh_prim_paths=self._config.importer.import_file_ply,
+            update_period=0,
+            offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)),
+            debug_vis=True,
+            pattern_cfg=camera_pattern_cfg,
         )
 
-        # after successful load, add camera to list
-        self.camera_list.append(path)
+        if self.domains is None:
+            self.domains = MatterportWarp(self._config)
+        # register camera
+        self.domains.register_camera(camera_cfg)
 
         # allow for tasks
         self._input_fields["start_writer"].enabled = True
-        self._input_fields["attach_callback"].enabled = True
         return
 
     def _start_writer(self):

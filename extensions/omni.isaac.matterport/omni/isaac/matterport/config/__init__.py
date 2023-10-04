@@ -1,8 +1,5 @@
-import os
-
-from .config import AssetConverterContext, MatterportConfig, SimCfg, ViewerCfg
+from .config import MatterportConfig, ViewerCfg
 from .sampler_config import SamplerCfg
+from .importer_cfg import MatterportImporterCfg, AssetConverterContext
 
-__all__ = ["MatterportConfig", "SimCfg", "AssetConverterContext", "ViewerCfg", "SamplerCfg"]
-
-# EoF
+__all__ = ["MatterportConfig", "MatterportImporterCfg", "AssetConverterContext", "ViewerCfg", "SamplerCfg"]
