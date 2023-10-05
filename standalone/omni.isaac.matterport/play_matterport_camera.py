@@ -28,19 +28,22 @@ simulation_app = app_launcher.app
 
 """Rest everything follows."""
 
-import os
+import numpy as np
 import math
 import torch
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+mpl.use("Qt5Agg")
 
 import omni.isaac.core.utils.prims as prim_utils
-import omni.replicator.core as rep
 from omni.isaac.core.utils.viewports import set_camera_view
 
 from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
-from omni.isaac.orbit.utils import convert_dict_to_backend
 from omni.isaac.orbit.sim import SimulationContext, SimulationCfg
 from omni.isaac.matterport.config import MatterportImporterCfg
-from .matterport_raycast_camera import MatterportRayCasterCamera
+from omni.isaac.orbit.sensors.camera import Camera, CameraCfg
+from omni.isaac.orbit.sim.spawners import PinholeCameraCfg
+from omni.isaac.matterport.domains.matterport_raycast_camera import MatterportRayCasterCamera
 
 
 def main():
@@ -52,11 +55,13 @@ def main():
     set_camera_view([2.5, 2.5, 3.5], [0.0, 0.0, 0.0])
     # load matterport secene
     importer_cfg = MatterportImporterCfg(
-        import_file_obj =  "/home/pascal/viplanner/env/matterport/v1/scans/2n8kARJN3HM/2n8kARJN3HM/matterport_mesh/0c334eaabb844eaaad049cbbb2e0a4f2/0c334eaabb844eaaad049cbbb2e0a4f2.obj",    )
+        obj_filepath="/home/pascal/viplanner/env/matterport/v1/scans/2n8kARJN3HM/2n8kARJN3HM/matterport_mesh/0c334eaabb844eaaad049cbbb2e0a4f2/0c334eaabb844eaaad049cbbb2e0a4f2.obj"
+    )
     matterport = importer_cfg.cls_name(importer_cfg)
     sim.reset()
     sim.pause()
-    # Setup camera sensor
+
+    # Setup Matterport Camera
     camera_pattern_cfg = patterns.PinholeCameraPatternCfg(
         focal_length=24.0,
         horizontal_aperture=20.955,
@@ -70,67 +75,93 @@ def main():
     ply_filepath = "/home/pascal/viplanner/env/matterport/v1/scans/2n8kARJN3HM/2n8kARJN3HM/house_segmentations/2n8kARJN3HM.ply"
     camera_cfg = RayCasterCfg(
         prim_path="/World/Camera",
-        mesh_prim_paths=ply_filepath,
+        mesh_prim_paths=[ply_filepath],
         update_period=0,
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)),
-        debug_vis=True,
+        debug_vis=False,
         pattern_cfg=camera_pattern_cfg,
+        max_distance=15,
     )
     # create xform because placement of camera directly under world is not supported
     prim_utils.create_prim("/World/Camera", "Xform")
     # Create camera
     camera = MatterportRayCasterCamera(cfg=camera_cfg)
 
-    # Create replicator writer
-    output_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "output_matterport", "camera")
-    rep_writer = rep.BasicWriter(output_dir=output_dir, frame_padding=3)
+    # Setup RGB Camera
+    rgb_camera_cfg = CameraCfg(
+        prim_path="/World/Camera_rgb",
+        data_types=[
+            "rgb",
+        ],
+        spawn=PinholeCameraCfg(),
+        width=640,
+        height=480,
+    )
+    rgb_camera = Camera(rgb_camera_cfg)
 
     # Play simulator
     sim.play()
 
+    figures = {}
+    # init semantics figure
+    fg_sem = plt.figure()
+    ax_sem = fg_sem.gca()
+    ax_sem.set_title("Semantic Segmentation")
+    img_sem = ax_sem.imshow(camera.data.output["semantic_segmentation"][0].cpu().numpy())
+    figures["semantics"] = {"fig": fg_sem, "axis": ax_sem, "img": img_sem}
+
+    # init depth figure
+    n_bins = 500  # Number of bins in the colormap
+    colors = mpl.colormaps["jet"](np.linspace(0, 1, n_bins))  # Colormap
+
+    def convert_depth_to_color(depth_img):
+        depth_img = depth_img.cpu().numpy()
+        depth_img_flattend = np.clip(depth_img.flatten(), a_min=0, a_max=15)
+        depth_img_flattend = np.round(depth_img_flattend / 15 * (n_bins - 1)).astype(np.int32)
+        depth_colors = colors[depth_img_flattend]
+        depth_colors = depth_colors.reshape(depth_img.shape[0], depth_img.shape[1], 4)
+        return depth_colors
+
+    fg_depth = plt.figure()
+    ax_depth = fg_depth.gca()
+    ax_depth.set_title("Distance To Image Plane")
+    img_depth = ax_depth.imshow(convert_depth_to_color(camera.data.output["distance_to_image_plane"][0]))
+    figures["depth"] = {"fig": fg_depth, "axis": ax_depth, "img": img_depth}
+    
+    plt.ion()
+
     # Simulate physics
     while simulation_app.is_running():
         # Set pose
-        eyes = torch.tensor([[0, 0, 2]])  # [[2.5, 2.5, 2.5]]
-        targets = torch.tensor([[math.cos(2*math.pi * camera.frame[0] / 1000), math.sin(2*math.pi * camera.frame[0] / 1000), 0.0]])
+        eyes = torch.tensor([[5, -10, 1]], device=camera.device)  # [[2.5, 2.5, 2.5]]
+        targets = torch.tensor(
+            [[5 + math.cos(2 * math.pi * camera.frame[0] / 1000), -10 + math.sin(2 * math.pi * camera.frame[0] / 1000), 0.0]],
+            device=camera.device
+        )
         camera.set_world_poses_from_view(eyes, targets)
-        
+        rgb_camera.set_world_poses_from_view(eyes, targets)
+
         # Step simulation
         sim.step(render=app_launcher.RENDER)
         for i in range(5):
             sim.render()
         # Update camera data
         camera.update(dt=sim.get_physics_dt())
+        rgb_camera.update(dt=sim.get_physics_dt())
 
-        # Print camera info
-        print(camera)
-        print("Received shape of depth image: ", camera.data.output["distance_to_image_plane"].shape)
-        print("-------------------------------")
+        """
+        Updates the visualization plane.
+        """
+        figures["semantics"]["img"].set_array(camera.data.output["semantic_segmentation"][0].cpu().numpy())
+        figures["semantics"]["fig"].canvas.draw()
+        figures["semantics"]["fig"].canvas.flush_events()
 
-        # Extract camera data
-        camera_index = 0
-        # note: BasicWriter only supports saving data in numpy format, so we need to convert the data to numpy.
-        if sim.backend == "torch":
-            # tensordict allows easy indexing of tensors in the dictionary
-            single_cam_data = convert_dict_to_backend(camera.data.output[camera_index], backend="numpy")
-        else:
-            # for numpy, we need to manually index the data
-            single_cam_data = dict()
-            for key, value in camera.data.output.items():
-                single_cam_data[key] = value[camera_index]
-        # Extract the other information
-        single_cam_info = camera.data.info[camera_index]
+        figures["depth"]["img"].set_array(convert_depth_to_color(camera.data.output["distance_to_image_plane"][0]))
+        figures["depth"]["fig"].canvas.draw()
+        figures["depth"]["fig"].canvas.flush_events()
 
-        # Pack data back into replicator format to save them using its writer
-        rep_output = dict()
-        for key, data, info in zip(single_cam_data.keys(), single_cam_data.values(), single_cam_info.values()):
-            if info is not None:
-                rep_output[key] = {"data": data, "info": info}
-            else:
-                rep_output[key] = data
-        # Save images
-        rep_output["trigger_outputs"] = {"on_time": camera.frame[camera_index]}
-        rep_writer.write(rep_output)
+        plt.pause(0.000001)
+
 
 if __name__ == "__main__":
     # Runs the main function

@@ -21,11 +21,11 @@ import omni.ext
 
 # isaac-core
 import omni.ui as ui
-from omni.isaac.matterport.config import MatterportConfig
-from omni.isaac.matterport.domains import MatterportDomains
 
 # omni-isaac-matterport
-from .matterport_importer import MatterportImporter
+from .ext_cfg import MatterportExtConfig
+from .matterport_domains import MatterportDomains
+from omni.isaac.matterport.domains import MatterportImporter
 from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
 from omni.isaac.orbit.sim import SimulationContext, SimulationCfg
 import omni.isaac.core.utils.stage as stage_utils
@@ -78,7 +78,7 @@ class MatterPortExtension(omni.ext.IExt):
         )
 
         # init config class and get path to extension
-        self._config = MatterportConfig()
+        self._config = MatterportExtConfig()
         self._extension_path = omni.kit.app.get_app().get_extension_manager().get_extension_path(ext_id)
 
         # set additonal parameters
@@ -213,14 +213,14 @@ class MatterPortExtension(omni.ext.IExt):
                     if is_mesh_file(path):
                         self._input_fields["import_btn"].enabled = True
                         self._make_ply_proposal(path)
-                        self._config.set_import_file_obj(path)
+                        self._config.set_obj_filepath(path)
                     else:
                         self._input_fields["import_btn"].enabled = False
                         carb.log_warn(f"Invalid path to .obj file: {path}")
 
                 kwargs = {
                     "label": "Input File",
-                    "default_val": self._config.importer.import_file_obj,
+                    "default_val": self._config.importer.obj_filepath,
                     "tooltip": "Click the Folder Icon to Set Filepath",
                     "use_folder_picker": True,
                     "item_filter_fn": on_filter_obj_item,
@@ -394,7 +394,7 @@ class MatterPortExtension(omni.ext.IExt):
         await self.sim.pause_async()
 
     def _start_loading(self):
-        path = self._config.import_file_obj
+        path = self._config.obj_filepath
         if not path:
             return
 
@@ -407,7 +407,7 @@ class MatterPortExtension(omni.ext.IExt):
             assert os.path.isfile(
                 file_path
             ), f"No .obj or .usd file found under relative path to extension data: {file_path}"
-            self._config.set_import_file_obj(file_path)  # update config
+            self._config.set_obj_filepath(file_path)  # update config
         carb.log_verbose("MatterPort 3D Mesh found, start loading...")
         
         self._matterport = MatterportImporter(self._config.importer)
@@ -449,7 +449,7 @@ class MatterPortExtension(omni.ext.IExt):
         )
         camera_cfg = RayCasterCfg(
             prim_path=camera_path,
-            mesh_prim_paths=ply_filepath,
+            mesh_prim_paths=[ply_filepath],
             update_period=0,
             offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)),
             debug_vis=True,

@@ -11,11 +11,11 @@ from dataclasses import dataclass
 
 # orbit
 from omni.isaac.orbit.envs import ViewerCfg
-from .importer_cfg import MatterportImporterCfg
+from omni.isaac.matterport.config.importer_cfg import MatterportImporterCfg
 
 
 @dataclass
-class MatterportConfig:
+class MatterportExtConfig:
     # config classes
     viewer: ViewerCfg = ViewerCfg()
     importer: MatterportImporterCfg = MatterportImporterCfg()
@@ -42,8 +42,8 @@ class MatterportConfig:
     def set_improved_patch_friction(self, value: bool):
         self.importer.physics_material.improve_patch_friction = value
 
-    def set_import_file_obj(self, value: str):
-        self.importer.import_file_obj = value
+    def set_obj_filepath(self, value: str):
+        self.importer.obj_filepath = value
 
     def set_import_file_ply(self, value: str):
         self.importer.import_file_ply = value

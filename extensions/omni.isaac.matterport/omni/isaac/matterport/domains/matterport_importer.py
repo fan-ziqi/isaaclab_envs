@@ -8,22 +8,25 @@
 
 # python
 import os
+from typing import TYPE_CHECKING
 
 # omni
 import carb
 import builtins
 import omni.isaac.core.utils.prims as prim_utils
 import omni.isaac.core.utils.stage as stage_utils
-from omni.isaac.matterport.config import MatterportImporterCfg
 
 # isaac-orbit
 from omni.isaac.orbit.terrains import TerrainImporter
 import omni.isaac.orbit.sim as sim_utils
 
+if TYPE_CHECKING:
+    from omni.isaac.matterport.config import MatterportImporterCfg
+
 # omniverse
-import omni.kit.asset_converter as converter
 from omni.isaac.core.utils import extensions
 extensions.enable_extension("omni.kit.asset_converter")
+import omni.kit.asset_converter as converter
 
 
 class MatterportConverter:
@@ -60,9 +63,10 @@ class MatterportImporter(TerrainImporter):
     Default stairs environment for testing
     """
 
-    cfg: MatterportImporterCfg
+    cfg: object  # MatterportImporterCfg
 
-    def __init__(self, cfg: MatterportImporterCfg) -> None:
+    # def __init__(self, cfg: MatterportImporterCfg) -> None:  # FIX circular input
+    def __init__(self, cfg) -> None:
         """
         :param
         """
@@ -70,7 +74,7 @@ class MatterportImporter(TerrainImporter):
 
         # Converter
         self.converter: MatterportConverter = MatterportConverter(
-            self._matterport_cfg.import_file_obj, self._matterport_cfg.asset_converter
+            self.cfg.obj_filepath, self.cfg.asset_converter
         )
         return
 
@@ -105,7 +109,7 @@ class MatterportImporter(TerrainImporter):
         return
 
     async def load_matterport(self) -> None:
-        _, ext = os.path.splitext(self._matterport_cfg.import_file_obj)
+        _, ext = os.path.splitext(self.cfg.obj_filepath)
         # if obj mesh --> convert to usd
         if ext == ".obj":
             await self.converter.convert_asset_to_usd()
@@ -113,7 +117,7 @@ class MatterportImporter(TerrainImporter):
         self.load_matterport_sync()
 
     def load_matterport_sync(self) -> None:
-        base_path, _ = os.path.splitext(self._matterport_cfg.import_file_obj)
+        base_path, _ = os.path.splitext(self.cfg.obj_filepath)
         assert os.path.exists(base_path + ".usd"), (
             "Matterport load sync can only handle '.usd' files not obj files. "
             "Please use the async function to convert the obj file to usd first (accessed over the extension in the GUI)"
@@ -131,7 +135,7 @@ class MatterportImporter(TerrainImporter):
         physics_material_cfg: sim_utils.RigidBodyMaterialCfg = self.cfg.physics_material
         # spawn the material
         physics_material_cfg.func(f"{self.cfg.prim_path}/physicsMaterial", self.cfg.physics_material)
-        sim_utils.bind_physics_material(self._xform_prim.GetPrimPath(), f"{self._matterport_cfg.prim_path}/physicsMaterial")
+        sim_utils.bind_physics_material(self._xform_prim.GetPrimPath(), f"{self.cfg.prim_path}/physicsMaterial")
 
         # add colliders and physics material
         if self.cfg.groundplane:

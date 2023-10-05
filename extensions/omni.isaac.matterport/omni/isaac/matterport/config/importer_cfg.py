@@ -2,7 +2,7 @@ from typing_extensions import Literal
 
 from omni.isaac.orbit.utils import configclass
 from omni.isaac.orbit.terrains import TerrainImporterCfg
-from omni.isaac.matterport.scripts import MatterportImporter
+from omni.isaac.matterport.domains import MatterportImporter
 
 from omni.isaac.core.utils import extensions
 extensions.enable_extension("omni.kit.asset_converter")
@@ -68,7 +68,7 @@ class MatterportImporterCfg(TerrainImporterCfg):
     All sub-terrains are imported relative to this prim path.
     """
 
-    import_file_obj: str = "/home/pascal/viplanner/env/matterport/v1/scans/2n8kARJN3HM/2n8kARJN3HM/matterport_mesh/0c334eaabb844eaaad049cbbb2e0a4f2/0c334eaabb844eaaad049cbbb2e0a4f2.obj"
+    obj_filepath: str = "/home/pascal/viplanner/env/matterport/v1/scans/2n8kARJN3HM/2n8kARJN3HM/matterport_mesh/0c334eaabb844eaaad049cbbb2e0a4f2/0c334eaabb844eaaad049cbbb2e0a4f2.obj"
 
     asset_converter: AssetConverterContext = asset_converter_cfg
 

@@ -13,7 +13,6 @@ readme  = "docs/README.md"
 "omni.isaac.ui" = {}
 "omni.isaac.core" = {}
 "omni.isaac.orbit" = {}
-"omni.isaac.anymal" = {}
 
 # Main python module this extension provides.
 [[python.module]]

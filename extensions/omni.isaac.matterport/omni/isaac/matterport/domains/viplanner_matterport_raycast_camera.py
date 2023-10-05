@@ -13,8 +13,8 @@ except ImportError:
 
 
 class VIPlannerMatterportRayCasterCamera(MatterportRayCasterCamera):
-    def __init__(self, cfg: RayCasterCfg, ply_filepath: str, ):
-        super().__init__(cfg, ply_filepath)
+    def __init__(self, cfg: RayCasterCfg):
+        super().__init__(cfg)
     
     def _color_mapping(self):
         viplanner_sem = VIPlannerSemMetaHandler()

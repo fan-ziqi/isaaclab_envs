@@ -7,16 +7,15 @@ from setuptools import setup
 INSTALL_REQUIRES = [
     # generic
     "trimesh",
-    "opencv-python-headless",
-    "open3d",
     "PyQt5",
+    "matplotlib>=3.5.0",
 ]
 
 # Installation operation
 setup(
     name="omni-isaac-matterport",
     author="Pascal Roth",
-    author_email="rothpa@student.ethz.ch",
+    author_email="rothpa@ethz.ch",
     version="0.0.1",
     description="Extension to include Matterport 3D Datasets into Isaac (taken from https://niessner.github.io/Matterport/).",
     keywords=["robotics"],
