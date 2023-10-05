@@ -20,17 +20,13 @@ import omni.client
 import omni.ext
 
 # isaac-core
-import omni.isaac.core.utils.prims as prim_utils
 import omni.ui as ui
 from omni.isaac.matterport.config import MatterportConfig
-from omni.isaac.matterport.exploration import RandomExplorer
-from omni.isaac.matterport.semantics import CameraData, MatterportCallbackDomains, MatterportWarp
-from omni.isaac.matterport.test import test_depth_warp
+from omni.isaac.matterport.domains import MatterportDomains
 
 # omni-isaac-matterport
 from .matterport_importer import MatterportImporter
 from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
-from omni.isaac.orbit.envs.base_env import BaseEnv, BaseEnvCfg
 from omni.isaac.orbit.sim import SimulationContext, SimulationCfg
 import omni.isaac.core.utils.stage as stage_utils
 
@@ -43,7 +39,6 @@ from omni.isaac.ui.ui_utils import (
     get_style,
     int_builder,
     setup_ui_headers,
-    state_btn_builder,
     str_builder,
 )
 
@@ -88,9 +83,8 @@ class MatterPortExtension(omni.ext.IExt):
 
         # set additonal parameters
         self._input_fields: dict = {}  # dictionary to store values of buttion, float fields, etc.
-        self.camera_list: list = []  # list of cameras prim for which semantic and depth are rendered
-        self.domains: MatterportWarp = None  # callback class for semantic rendering
-
+        self.domains: MatterportDomains = None  # callback class for semantic rendering
+        self.ply_proposal: str = ""
         # build ui
         self.build_ui()
         return
@@ -99,19 +93,18 @@ class MatterPortExtension(omni.ext.IExt):
     # UI Build functiions
     ##
 
-    def build_ui(self, task_callback: bool = False):
+    def build_ui(self, build_cam: bool = False, build_viz: bool = False):
         with self._window.frame:
             with ui.VStack(spacing=5, height=0):
                 self._build_info_ui()
 
                 self._build_import_ui()
 
-                if task_callback:
+                if build_cam:
                     self._build_camera_ui()
-                    self._build_writer_ui()
-                    self._build_callback_ui()
-                else:
-                    self._build_task_ui()
+
+                if build_viz:
+                    self._build_viz_ui()
 
         async def dock_window():
             await omni.kit.app.get_app().next_update_async()
@@ -244,28 +237,6 @@ class MatterPortExtension(omni.ext.IExt):
                 )
                 self._input_fields["import_btn"].enabled = False
 
-                # get import location and save directory
-                def check_file_type_ply(model=None):
-                    path = model.get_value_as_string()
-                    if is_ply_file(path):
-                        self._input_fields["import_ply_btn"].enabled = True
-                        self._config.set_import_file_ply(path)
-                    else:
-                        carb.log_warn(f"Invalid path to .ply: {path}")
-
-                kwargs = {
-                    "label": "Input ply File",
-                    "default_val": self._config.importer.import_file_ply,
-                    "tooltip": "Click the Folder Icon to Set Filepath",
-                    "use_folder_picker": True,
-                    "item_filter_fn": on_filter_ply_item,
-                    "bookmark_label": "Included Matterport3D Point-Cloud with semantic labels",
-                    "bookmark_path": f"{self._extension_path}/data/mesh",
-                    "folder_dialog_title": "Select .ply Point-Cloud File",
-                    "folder_button_title": "Select .ply Point-Cloud",
-                }
-                self._input_fields["input_ply_file"] = str_builder(**kwargs)
-                self._input_fields["input_ply_file"].add_value_changed_fn(check_file_type_ply)
         return
 
     def _build_camera_ui(self):
@@ -280,6 +251,20 @@ class MatterPortExtension(omni.ext.IExt):
         )
         with frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
+                # get import location and save directory
+                kwargs = {
+                    "label": "Input ply File",
+                    "default_val": self.ply_proposal,
+                    "tooltip": "Click the Folder Icon to Set Filepath",
+                    "use_folder_picker": True,
+                    "item_filter_fn": on_filter_ply_item,
+                    "bookmark_label": "Included Matterport3D Point-Cloud with semantic labels",
+                    "bookmark_path": f"{self._extension_path}/data/mesh",
+                    "folder_dialog_title": "Select .ply Point-Cloud File",
+                    "folder_button_title": "Select .ply Point-Cloud",
+                }
+                self._input_fields["input_ply_file"] = str_builder(**kwargs)
+
                 # data fields parameters
                 self._input_fields["camera_semantics"] = cb_builder(
                     label="Enable Semantics",
@@ -321,9 +306,9 @@ class MatterPortExtension(omni.ext.IExt):
                 self._input_fields["load_camera"].enabled = False
         return
 
-    def _build_writer_ui(self):
+    def _build_viz_ui(self):
         frame = ui.CollapsableFrame(
-            title="Writer and Visuaization",
+            title="Visuaization",
             height=0,
             collapsed=False,
             style=get_style(),
@@ -338,92 +323,14 @@ class MatterPortExtension(omni.ext.IExt):
                     tooltip=f"Visualize Semantics and/or Depth (default: {self._config.visualize})",
                     on_clicked_fn=lambda m, config=self._config: config.set_visualize(m),
                     default_val=self._config.visualize,
-                )                
-                
-                # control parameters
-                self._input_fields["compute_frequency"] = int_builder(
-                    "Compute Frequency",
-                    default_val=1,
-                    tooltip=f"Sets the saving frequency, can be adjusted on the fly (default: {self._config.compute_frequency})",
                 )
-                self._input_fields["compute_frequency"].add_value_changed_fn(
-                    lambda m, config=self._config: config.set_compute_frequency(m.get_value_as_int())
+                dropdown_builder(
+                    "Shown Camera Prim",
+                    items=list(self.domains.cameras.keys()),
+                    default_val=list(self.domains.cameras.keys())[0],
+                    on_clicked_fn=lambda mode_str, config=self._config: config.set_visualization_prim(mode_str),
+                    tooltip="Select the camera prim shown in the visuaization window",
                 )
-
-                # get save directory
-                kwargs = {
-                    "label": "Save Directory",
-                    "type": "stringfield",
-                    "default_val": self._config.save_path,
-                    "tooltip": "Click the Folder Icon to Set Filepath",
-                    "use_folder_picker": True,
-                }
-                self._input_fields["save_path"] = str_builder(**kwargs)
-                self._input_fields["save_path"].add_value_changed_fn(self._check_save_path)
-                self._default_save_path = self._config.save_path
-
-                self._input_fields["start_writer"] = btn_builder(
-                    "Start Writer", text="Start Writer", on_clicked_fn=self._start_writer
-                )
-                self._input_fields["start_writer"].enabled = False
-        return
-
-    def _build_task_ui(self):
-        frame = ui.CollapsableFrame(
-            title="Tasks",
-            height=0,
-            collapsed=False,
-            style=get_style(),
-            style_type_name_override="CollapsableFrame",
-            horizontal_scrollbar_policy=ui.ScrollBarPolicy.SCROLLBAR_AS_NEEDED,
-            vertical_scrollbar_policy=ui.ScrollBarPolicy.SCROLLBAR_ALWAYS_ON,
-        )
-        with frame:
-            with ui.VStack(style=get_style(), spacing=5, height=0):
-                # Random Exploration
-                self._input_fields["annotator_callback"] = btn_builder(
-                    "Configure Physics Callback", text="Configure", on_clicked_fn=self._rebuild_ui
-                )
-                self._input_fields["annotator_callback"].enabled = False
-
-                # Random Exploration
-                self._input_fields["explorer"] = btn_builder(
-                    "Start Explorer",
-                    text="Explore",
-                    on_clicked_fn=self._start_explorer,
-                )
-                self._input_fields["explorer"].enabled = False
-
-                # Depth Test
-                self._input_fields["test"] = btn_builder("Test Warp", text="Start", on_clicked_fn=self._depth_test)
-                self._input_fields["test"].enabled = False
-        return
-
-    def _build_callback_ui(self):
-        frame = ui.CollapsableFrame(
-            title="Callback",
-            height=0,
-            collapsed=False,
-            style=get_style(),
-            style_type_name_override="CollapsableFrame",
-            horizontal_scrollbar_policy=ui.ScrollBarPolicy.SCROLLBAR_AS_NEEDED,
-            vertical_scrollbar_policy=ui.ScrollBarPolicy.SCROLLBAR_ALWAYS_ON,
-        )
-        with frame:
-            # Attach Callback
-            butten_dict = {
-                "label": "Attach callback",
-                "type": "button",
-                "a_text": "Attach",
-                "b_text": "Remove",
-                "tooltip": "Attach callback to the camera",
-                "on_clicked_fn": self._attach_callback,
-            }
-
-            self._input_fields["attach_callback"] = state_btn_builder(**butten_dict)
-            self._input_fields["attach_callback"].enabled = False
-
-        return
 
     ##
     # Shutdown Helpers
@@ -437,23 +344,6 @@ class MatterPortExtension(omni.ext.IExt):
     ##
     # Path Helpers
     ##
-
-    def _check_save_path(self, path):
-        path = path.get_value_as_string()
-
-        if not os.path.isfile(path):
-            self._input_fields["start_writer"].enabled = True
-            self._config.set_save_path(path)
-        else:
-            self._input_fields["start_writer"].enabled = False
-            carb.log_warn(f"Directory at save path {path} does not exist!")
-
-    def _check_cam_prim(self, path) -> None:
-        # check if prim exists
-        self._input_fields["load_camera"].enabled = True
-        return
-
-    # FIXME: currently cannot set value because of read-only property
     def _make_ply_proposal(self, path: str) -> None:
         """use default matterport datastructure to make proposal about point-cloud file
 
@@ -472,10 +362,10 @@ class MatterPortExtension(omni.ext.IExt):
             ply_file = os.path.join(ply_dir, f"{env_id}.ply")
             os.path.isfile(ply_file)
             carb.log_verbose(f"Found ply file: {ply_file}")
-            # self._input_fields["input_ply_file"].set_value = ply_file
+            self.ply_proposal = ply_file
         except FileNotFoundError:
             carb.log_verbose("No ply file found in default matterport datastructure")
-        return
+        
 
     ##
     # Load Mesh and Point-Cloud
@@ -524,17 +414,19 @@ class MatterPortExtension(omni.ext.IExt):
         asyncio.ensure_future(self.load_matterport())
 
         carb.log_info("MatterPort 3D Mesh loaded")
+        self.build_ui(build_cam=True)
         self._input_fields["import_btn"].enabled = False
-        self._input_fields["explorer"].enabled = True
-        self._input_fields["annotator_callback"].enabled = True
-        self._input_fields["test"].enabled = True
-        return
+
 
     ##
-    # Register Cameras and Writers
+    # Register Cameras
     ##
 
     def _register_camera(self):
+        ply_filepath = self._input_fields["input_ply_file"].get_value_as_string()
+        if not is_ply_file(ply_filepath):
+            carb.log_error("Given ply path is not valid! No camera created!")
+
         camera_path = self._input_fields["camera_prim"].get_value_as_string()
         camera_semantics = self._input_fields["camera_semantics"].get_value_as_bool()
         camera_depth = self._input_fields["camera_depth"].get_value_as_bool()
@@ -557,7 +449,7 @@ class MatterPortExtension(omni.ext.IExt):
         )
         camera_cfg = RayCasterCfg(
             prim_path=camera_path,
-            mesh_prim_paths=self._config.importer.import_file_ply,
+            mesh_prim_paths=ply_filepath,
             update_period=0,
             offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)),
             debug_vis=True,
@@ -565,54 +457,13 @@ class MatterPortExtension(omni.ext.IExt):
         )
 
         if self.domains is None:
-            self.domains = MatterportWarp(self._config)
+            self.domains = MatterportDomains(self._config)
         # register camera
         self.domains.register_camera(camera_cfg)
 
+        # initialize physics handles
+        self.sim.reset()
+    
         # allow for tasks
-        self._input_fields["start_writer"].enabled = True
+        self.build_ui(build_cam=True, build_viz=True)
         return
-
-    def _start_writer(self):
-        # update config
-        self._config.set_save(True)
-        if self._config.save_path == self._default_save_path:
-            ply_dir = os.path.split(self._config.import_file_ply)[0]
-            matterport_dir = os.path.split(ply_dir)[0]
-            data_dir = os.path.join(matterport_dir, "matterport_data")
-            self._config.set_save_path(data_dir)
-        # init saving
-        self.domains.init_save()
-        # disable button and print info
-        self._input_fields["start_writer"].enabled = False
-        carb.log_info("Writer started!")
-        return
-
-    ##
-    # Tasks
-    ##
-    # Annotator Physics Callback
-    def _rebuild_ui(self):
-        return self.build_ui(task_callback=True)
-
-    def _attach_callback(self, val) -> None:
-        callback = MatterportCallbackDomains(self._config, self.domains)
-        callback.set_domain_callback(val)
-        return
-
-    # Random Exploration
-    def _start_explorer(self):
-        self._input_fields["annotator_callback"].enabled = False
-        self._input_fields["test"].enabled = False
-        # start random exploration
-        self.explorer = RandomExplorer(self.domains)
-        self.explorer.setup()
-        asyncio.ensure_future(self.explorer.explore())
-        return
-
-    def _depth_test(self):
-        asyncio.ensure_future(test_depth_warp(self.domains))
-        return
-
-
-# EoF

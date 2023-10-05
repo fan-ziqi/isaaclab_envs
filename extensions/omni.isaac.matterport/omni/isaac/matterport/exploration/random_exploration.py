@@ -594,4 +594,56 @@ class RandomExplorer:
         return
 
 
-# EoF
+    # # save data helpers ###
+
+    # def _init_save(self, save_path: Optional[str] = None) -> None:
+    #     if save_path is not None:
+    #         self._cfg.save_path = save_path
+        
+    #     # create directories
+    #     os.makedirs(self._cfg.save_path, exist_ok=True)
+    #     os.makedirs(os.path.join(self._cfg.save_path, "semantics"), exist_ok=True)
+    #     os.makedirs(os.path.join(self._cfg.save_path, "depth"), exist_ok=True)
+
+    #     # save camera configurations
+    #     intrinsics = np.zeros((len(self.cameras), 9))
+    #     for idx, curr_cam in enumerate(self.cameras):
+    #         intrinsics[idx] = curr_cam.data.intrinsic_matrices[0].cpu().numpy().flatten()
+    #     np.savetxt(os.path.join(self._cfg.save_path, "intrinsics.txt"), intrinsics, delimiter=",")
+
+
+    # def _save_data(self) -> None:
+    #     # TODO: use replicator writer, currently too slow
+    #     for camera in self.cameras:
+    #         suffix = f"_{camera.cfg.prim_path}"
+    #     cam_suffix = f"_cam{cam_idx}" if len(self.cameras) > 1 else ""
+
+    #     # SEMANTICS
+    #     if cam_data.semantic:
+    #         cv2.imwrite(
+    #             os.path.join(self._cfg.save_path, "semantics", f"{idx}".zfill(4) + cam_suffix + ".png"),
+    #             cv2.cvtColor(cam_data.render_sem.astype(np.uint8), cv2.COLOR_RGB2BGR),
+    #         )
+
+    #     # DEPTH
+    #     if cam_data.depth:
+    #         cv2.imwrite(
+    #             os.path.join(self._cfg.save_path, "depth", f"{idx}".zfill(4) + cam_suffix + ".png"),
+    #             cam_data.render_depth,
+    #         )
+
+    #     # camera pose in robotics frame (x forward, y left, z up)
+    #     rot_quat = tf.Rotation.from_matrix(cam_data.rot.cpu().numpy()).as_quat()  # get quat as (x, y, z, w) format
+    #     pose = np.hstack((cam_data.pos.cpu().numpy(), rot_quat))
+    #     cam_data.poses = np.append(cam_data.poses, pose.reshape(1, -1), axis=0)
+    #     return
+
+    # def _end_save(self) -> None:
+    #     # save camera poses
+    #     for idx, cam_data in enumerate(self.cameras):
+    #         np.savetxt(
+    #             os.path.join(self._cfg.save_path, f"camera_extrinsic_cam{idx}.txt"),
+    #             cam_data.poses[1:],
+    #             delimiter=",",
+    #         )
+    #     return

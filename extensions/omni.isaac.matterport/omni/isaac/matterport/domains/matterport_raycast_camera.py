@@ -17,11 +17,22 @@ from omni.isaac.matterport.scripts import DATA_DIR
 
 
 class MatterportRayCasterCamera(RayCasterCamera):
-    def __init__(self, cfg: RayCasterCfg, ply_filepath: str, ):
+    
+    UNSUPPORTED_TYPES={
+        "rgb",
+        "instance_id_segmentation",
+        "instance_segmentation",
+        "skeleton_data",
+        "motion_vectors",
+        "bounding_box_2d_tight",
+        "bounding_box_2d_loose",
+        "bounding_box_3d",
+    }
+        
+    def __init__(self, cfg: RayCasterCfg):
         super().__init__(cfg)
 
         # matterport specific parameters
-        self.ply_filepath = ply_filepath
         self.trimesh: trimesh.Trimesh = None
         self.face_id_category_mapping: torch.Tensor = None
 
@@ -41,15 +52,15 @@ class MatterportRayCasterCamera(RayCasterCamera):
 
     def _initialize_warp_meshes(self):
         # check if mesh is already loaded
-        if self.ply_filepath in self.meshes:
+        if self.cfg.mesh_prim_path in self.meshes:
             return
         
         # find ply
-        if os.path.isabs(self.ply_filepath):
-            file_path = self.ply_filepath
-            assert os.path.isfile(self.ply_filepath), f"No .ply file found under absolute path: {self.ply_filepath}"
+        if os.path.isabs(self.cfg.mesh_prim_path):
+            file_path = self.cfg.mesh_prim_path
+            assert os.path.isfile(self.cfg.mesh_prim_path), f"No .ply file found under absolute path: {self.cfg.mesh_prim_path}"
         else:
-            file_path = os.path.join(DATA_DIR, self.ply_filepath)
+            file_path = os.path.join(DATA_DIR, self.cfg.mesh_prim_path)
             assert os.path.isfile(file_path), f"No .ply file found under relative path to extension data: {file_path}"
 
         # load ply
@@ -68,7 +79,7 @@ class MatterportRayCasterCamera(RayCasterCamera):
             indices=wp.array(self.trimesh.faces.astype(np.int32).flatten(), dtype=int, device=self._device),
         )
         # save mesh
-        self.meshes[self.ply_filepath] = {"mesh": mesh_wp, "id": mesh_wp.id, "device": mesh_wp.device}
+        self.meshes[self.cfg.mesh_prim_path] = {"mesh": mesh_wp, "id": mesh_wp.id, "device": mesh_wp.device}
 
     def _update_buffers_impl(self, env_ids: Sequence[int]):
         """Fills the buffers of the sensor data."""
@@ -129,4 +140,4 @@ class MatterportRayCasterCamera(RayCasterCamera):
             face_color = self.color[face_id_mpcat40]
 
             # reshape and transpose to get the correct orientation
-            self._data.output["semantic_segementation"][env_ids] = face_color.reshape(cam_data.width, cam_data.height, 3).transpose(1, 0, 2)
+            self._data.output["semantic_segementation"][env_ids] = face_color.reshape(self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height, 3).permute(0, 2, 1, 3)

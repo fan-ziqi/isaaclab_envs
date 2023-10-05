@@ -69,9 +69,6 @@ class MatterportImporterCfg(TerrainImporterCfg):
     """
 
     import_file_obj: str = "/home/pascal/viplanner/env/matterport/v1/scans/2n8kARJN3HM/2n8kARJN3HM/matterport_mesh/0c334eaabb844eaaad049cbbb2e0a4f2/0c334eaabb844eaaad049cbbb2e0a4f2.obj"
-    import_file_ply: str = (
-        "/home/pascal/viplanner/env/matterport/v1/scans/2n8kARJN3HM/2n8kARJN3HM/house_segmentations/2n8kARJN3HM.ply"
-    )
 
     asset_converter: AssetConverterContext = asset_converter_cfg
 

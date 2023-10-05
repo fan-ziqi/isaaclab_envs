@@ -21,14 +21,7 @@ class MatterportConfig:
     importer: MatterportImporterCfg = MatterportImporterCfg()
     # semantic and depth inforamtion (can be changed individually for each camera)
     visualize: bool = False
-    # callback parameters
-    compute_frequency: int = 16
-    # depth parameters
-    depth_scale: float = 1000.0  # scale depth for saving to have millimeter precision
-    # saving
-    save: bool = False
-    save_path: str = "(same as source)"
-    ros_p_mat: bool = True  # save intrinsics in ROS P matrix format
+    visualize_prim: str = None
 
     # set value functions
     def set_friction_dynamic(self, value: float):
@@ -61,11 +54,5 @@ class MatterportConfig:
     def set_visualize(self, value: bool):
         self.visualize = value
 
-    def set_save(self, value: bool):
-        self.save = value
-
-    def set_save_frequency(self, value: int):
-        self.compute_frequency = value
-
-    def set_save_path(self, value: str):
-        self.save_path = value
+    def set_visualization_prim(self, value: str):
+        self.visualize_prim = value
