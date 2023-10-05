@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -9,9 +8,10 @@
 # python
 from dataclasses import dataclass
 
+from omni.isaac.matterport.config.importer_cfg import MatterportImporterCfg
+
 # orbit
 from omni.isaac.orbit.envs import ViewerCfg
-from omni.isaac.matterport.config.importer_cfg import MatterportImporterCfg
 
 
 @dataclass

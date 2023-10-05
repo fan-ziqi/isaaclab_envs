@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch

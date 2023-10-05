@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -10,12 +9,12 @@ import matplotlib.pyplot as plt
 
 # python
 import numpy as np
-import scipy.spatial.transform as tf
-import torch
 
 # omni
 import omni
 import omni.replicator.core as rep
+import scipy.spatial.transform as tf
+import torch
 from omni.isaac.core.simulation_context import SimulationContext
 
 # omni-isaac-matterport

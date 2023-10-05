@@ -122,10 +122,10 @@ cw_30:
   factor: 4
   translation: [0, 0, 1500]
 
-cw_30:
+cw_30_neg:
   cw_prim: "Road_Crosswalk_Town01_31"
   factor: 2
-  translation: [0, 0, 1500]
+  translation: [0, 0, -1500]
 
 cw_32:
   cw_prim: "Road_Crosswalk_Town01_32"

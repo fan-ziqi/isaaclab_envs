@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -6,19 +5,20 @@
 @brief      Load Semantics from Matterport3D and make them available to Isaac Sim
 """
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import numpy as np
 from typing import Dict
 
 import carb
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+from omni.isaac.matterport.domains.matterport_raycast_camera import (
+    MatterportRayCasterCamera,
+)
+from omni.isaac.orbit.sensors.camera import CameraData
+from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg
+from omni.isaac.orbit.sim import SimulationContext
 
 from .ext_cfg import MatterportExtConfig
-from omni.isaac.matterport.domains.matterport_raycast_camera import MatterportRayCasterCamera
-
-from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg
-from omni.isaac.orbit.sensors.camera import CameraData
-from omni.isaac.orbit.sim import SimulationContext
 
 mpl.use("Qt5Agg")
 
@@ -43,7 +43,7 @@ class MatterportDomains:
         # setup camera visualization
         self.figures = {}
 
-        # interal parameters
+        # internal parameters
         self._save_counter: int = 0
         return
 
@@ -73,7 +73,7 @@ class MatterportDomains:
             self._sim: SimulationContext = SimulationContext.instance()
         else:
             carb.log_error("No Simulation Context found! Matterport Callback not attached!")
-        
+
         # add callback
         if val:
             self._sim.pause()
@@ -85,10 +85,10 @@ class MatterportDomains:
     # Callback Function
     ##
 
-    def _update(self, dt: float):        
+    def _update(self, dt: float):
         for camera in self.cameras:
             camera.update(dt)
-        
+
         if self._cfg.visualize:
             self._update_visualization(self.cameras[self._cfg.visualize_prim].data)
             self.max_depth = self.cameras[self._cfg.visualize_prim].cfg.max_distance
@@ -142,7 +142,9 @@ class MatterportDomains:
             # DEPTH
             if "distance_to_image_plane" in data.output.keys():  # noqa: SIM118
                 # cam_data.img_depth.set_array(cam_data.render_depth)
-                self.figures["depth"]["fig"].set_array(self.convert_depth_to_color(data.output["distance_to_image_plane"][0]))
+                self.figures["depth"]["fig"].set_array(
+                    self.convert_depth_to_color(data.output["distance_to_image_plane"][0])
+                )
                 self.figures["depth"]["img"].canvas.draw()
                 self.figures["depth"]["img"].canvas.flush_events()
 

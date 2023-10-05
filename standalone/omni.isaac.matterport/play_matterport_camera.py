@@ -28,22 +28,25 @@ simulation_app = app_launcher.app
 
 """Rest everything follows."""
 
-import numpy as np
 import math
-import torch
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
+
 mpl.use("Qt5Agg")
 
 import omni.isaac.core.utils.prims as prim_utils
 from omni.isaac.core.utils.viewports import set_camera_view
-
-from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
-from omni.isaac.orbit.sim import SimulationContext, SimulationCfg
 from omni.isaac.matterport.config import MatterportImporterCfg
+from omni.isaac.matterport.domains.matterport_raycast_camera import (
+    MatterportRayCasterCamera,
+)
 from omni.isaac.orbit.sensors.camera import Camera, CameraCfg
+from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
+from omni.isaac.orbit.sim import SimulationCfg, SimulationContext
 from omni.isaac.orbit.sim.spawners import PinholeCameraCfg
-from omni.isaac.matterport.domains.matterport_raycast_camera import MatterportRayCasterCamera
 
 
 def main():
@@ -72,7 +75,9 @@ def main():
             "semantic_segmentation",
         ],
     )
-    ply_filepath = "/home/pascal/viplanner/env/matterport/v1/scans/2n8kARJN3HM/2n8kARJN3HM/house_segmentations/2n8kARJN3HM.ply"
+    ply_filepath = (
+        "/home/pascal/viplanner/env/matterport/v1/scans/2n8kARJN3HM/2n8kARJN3HM/house_segmentations/2n8kARJN3HM.ply"
+    )
     camera_cfg = RayCasterCfg(
         prim_path="/World/Camera",
         mesh_prim_paths=[ply_filepath],
@@ -127,7 +132,7 @@ def main():
     ax_depth.set_title("Distance To Image Plane")
     img_depth = ax_depth.imshow(convert_depth_to_color(camera.data.output["distance_to_image_plane"][0]))
     figures["depth"] = {"fig": fg_depth, "axis": ax_depth, "img": img_depth}
-    
+
     plt.ion()
 
     # Simulate physics
@@ -135,8 +140,14 @@ def main():
         # Set pose
         eyes = torch.tensor([[5, -10, 1]], device=camera.device)  # [[2.5, 2.5, 2.5]]
         targets = torch.tensor(
-            [[5 + math.cos(2 * math.pi * camera.frame[0] / 1000), -10 + math.sin(2 * math.pi * camera.frame[0] / 1000), 0.0]],
-            device=camera.device
+            [
+                [
+                    5 + math.cos(2 * math.pi * camera.frame[0] / 1000),
+                    -10 + math.sin(2 * math.pi * camera.frame[0] / 1000),
+                    0.0,
+                ]
+            ],
+            device=camera.device,
         )
         camera.set_world_poses_from_view(eyes, targets)
         rgb_camera.set_world_poses_from_view(eyes, targets)

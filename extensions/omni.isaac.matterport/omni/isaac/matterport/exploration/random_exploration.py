@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -6,22 +5,18 @@
 @brief      Load Semantics from Matterport3D and make them available to Isaac Sim
 """
 
-import numpy as np
 import os
 import random
-import scipy.spatial.transform as tf
 import time
-import torch
-from scipy.spatial import KDTree
-
-# python
-from scipy.stats import qmc
 from typing import Tuple
 
 import carb
+import numpy as np
 
 # omni
 import omni
+import scipy.spatial.transform as tf
+import torch
 from omni.isaac.matterport.config import SamplerCfg
 
 # omni-isaac-matterport
@@ -29,6 +24,10 @@ from omni.isaac.matterport.semantics import MatterportWarp
 
 # omni-isaac-orbit
 from omni.isaac.orbit.sensors.camera import Camera, PinholeCameraCfg
+from scipy.spatial import KDTree
+
+# python
+from scipy.stats import qmc
 
 
 class RandomExplorer:
@@ -152,7 +151,7 @@ class RandomExplorer:
 
             self.time_raycast = time.time() - start
 
-            # filter points with insuffcient hit rate and too small min distance (use the semantic camera)
+            # filter points with insufficient hit rate and too small min distance (use the semantic camera)
             if hit_rate < self._cfg_explorer.min_hit_rate:
                 print(f"Point: {self.pt_idx} \trejected due to insufficient hit rate")
                 self.pt_idx += 1
@@ -326,7 +325,7 @@ class RandomExplorer:
 
         # init sampler as qmc
         sampler = qmc.Halton(d=2, scramble=False)
-        # determine numer of samples to dram
+        # determine number of samples to dram
         nbr_points = int(max_area * self._cfg_explorer.points_per_m2)
         # get raw samples origins
         points = sampler.random(nbr_points)
@@ -361,6 +360,7 @@ class RandomExplorer:
 
         if self.debug:
             import copy
+
             import open3d as o3d
 
             o3d_mesh = self.domains.mesh.as_open3d
@@ -388,7 +388,7 @@ class RandomExplorer:
         # free gpu memory
         ray_origins = filter_combined = filter_inside_mesh = filter_outside_wall = z_depth = ray_hits_world_down = None
 
-        # enfore a minimum distance to the walls
+        # enforce a minimum distance to the walls
         angles = np.linspace(-np.pi, np.pi, 20)
         ray_directions = tf.Rotation.from_euler("z", angles, degrees=False).as_matrix() @ np.array([1, 0, 0])
         ray_hit = []
@@ -407,11 +407,12 @@ class RandomExplorer:
                 torch.norm(ray_hits_world - self.camera_centers, dim=1) > self._cfg_explorer.min_wall_distance
             )
 
-        # check if every point has the minumum distance in every direction
+        # check if every point has the minimum distance in every direction
         without_wall = torch.all(torch.vstack(ray_hit), dim=0)
 
         if self.debug:
             import copy
+
             import open3d as o3d
 
             o3d_mesh = self.domains.mesh.as_open3d
@@ -489,6 +490,7 @@ class RandomExplorer:
 
         if self.debug:
             import copy
+
             import open3d as o3d
 
             o3d_mesh = self.domains.mesh.as_open3d
@@ -542,6 +544,7 @@ class RandomExplorer:
 
         if self.debug:
             import copy
+
             import open3d as o3d
 
             o3d_mesh = self.domains.mesh.as_open3d
@@ -578,7 +581,7 @@ class RandomExplorer:
         self.camera_centers = self.camera_centers[~all_collision_idx, :]
         self.nbr_points = self.camera_centers.shape[0]
 
-        # vary the rotation of the forward and horizontal axis (in camera frame) as a uniform distribution withion the limits
+        # vary the rotation of the forward and horizontal axis (in camera frame) as a uniform distribution within the limits
         self.x_angles = np.random.uniform(
             self._cfg_explorer.x_angle_range[0], self._cfg_explorer.y_angle_range[1], self.nbr_points
         )
@@ -593,13 +596,12 @@ class RandomExplorer:
         self.face_idx = torch.zeros(self.nbr_faces, dtype=torch.int64)
         return
 
-
     # # save data helpers ###
 
     # def _init_save(self, save_path: Optional[str] = None) -> None:
     #     if save_path is not None:
     #         self._cfg.save_path = save_path
-        
+
     #     # create directories
     #     os.makedirs(self._cfg.save_path, exist_ok=True)
     #     os.makedirs(os.path.join(self._cfg.save_path, "semantics"), exist_ok=True)
@@ -610,7 +612,6 @@ class RandomExplorer:
     #     for idx, curr_cam in enumerate(self.cameras):
     #         intrinsics[idx] = curr_cam.data.intrinsic_matrices[0].cpu().numpy().flatten()
     #     np.savetxt(os.path.join(self._cfg.save_path, "intrinsics.txt"), intrinsics, delimiter=",")
-
 
     # def _save_data(self) -> None:
     #     # TODO: use replicator writer, currently too slow

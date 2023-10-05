@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 # configs
 from .configs import DATA_DIR, CarlaExplorerConfig, CarlaLoaderConfig
 

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -33,10 +32,10 @@ Rest everything follows.
 """
 
 import json
+from typing import Optional
 
 # python
 import numpy as np
-from typing import Optional
 
 # isaac-debug
 import omni.isaac.debug_draw._debug_draw as omni_debug_draw

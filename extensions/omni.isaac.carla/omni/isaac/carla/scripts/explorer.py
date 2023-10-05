@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -6,22 +5,20 @@
 @brief      Explore Carla Datasets
 """
 
-# python
-import numpy as np
 import os
 import random
-import scipy.spatial.transform as tf
 import time
-import yaml
-from scipy.spatial import KDTree
-from scipy.stats import qmc
-from typing import List, Tuple
+from typing import Tuple
 
 # omniverse
 import carb
 import cv2
-import omni.isaac.core.utils.prims as prim_utils
+
+# python
+import numpy as np
 import omni.isaac.debug_draw._debug_draw as omni_debug_draw
+import scipy.spatial.transform as tf
+import yaml
 
 # isaac-carla
 from omni.isaac.carla.configs import CarlaExplorerConfig, CarlaLoaderConfig
@@ -29,15 +26,17 @@ from omni.isaac.core.objects import VisualCuboid
 
 # isaac-core
 from omni.isaac.core.simulation_context import SimulationContext
-from omni.physx import get_physx_scene_query_interface
-from pxr import Gf, Usd, UsdGeom
-
-# isaac-anymal
-from viplanner.config.viplanner_sem_meta import VIPlannerSemMetaHandler
 
 # isaac-orbit
 from omni.isaac.orbit.sensors.camera import Camera
 from omni.isaac.orbit.utils.math import convert_quat
+from omni.physx import get_physx_scene_query_interface
+from pxr import Gf, Usd, UsdGeom
+from scipy.spatial import KDTree
+from scipy.stats import qmc
+
+# isaac-anymal
+from viplanner.config.viplanner_sem_meta import VIPlannerSemMetaHandler
 
 from .loader import CarlaLoader
 
@@ -61,7 +60,8 @@ class CarlaExplorer:
         # VIPlanner Semantic Meta Handler and mesh to sem class mapping
         if self._cfg_load.sem_mesh_to_class_map is not None:
             self.vip_sem_meta: VIPlannerSemMetaHandler = VIPlannerSemMetaHandler()
-            self.class_keywords = yaml.safe_load(open(self._cfg_load.sem_mesh_to_class_map))
+            with open(self._cfg_load.sem_mesh_to_class_map) as f:
+                self.class_keywords = yaml.safe_load(f)
 
         # init buffers
         self.camera_positions: np.ndarray = np.array([])
@@ -396,7 +396,7 @@ class CarlaExplorer:
         # select random neighbor that is not in collision
         direction_neighbor_idx = np.hstack(
             [
-                (collision_single_node == False).nonzero()[0][-1]
+                (collision_single_node is False).nonzero()[0][-1]
                 for collision_single_node in collision[~all_collision_idx, :]
             ]
         )
@@ -415,13 +415,11 @@ class CarlaExplorer:
         self.camera_positions = self.camera_positions[~all_collision_idx, :]
         self.nbr_points = self.camera_positions.shape[0]
 
-        # vary the rotation of the forward and horizontal axis (in camera frame) as a uniform distribution withion the limits
+        # vary the rotation of the forward and horizontal axis (in camera frame) as a uniform distribution within the limits
         x_angles = np.random.uniform(self._cfg.x_angle_range[0], self._cfg.x_angle_range[1], self.nbr_points)
         y_angles = np.random.uniform(self._cfg.y_angle_range[0], self._cfg.y_angle_range[1], self.nbr_points)
 
-        self.cam_angles = np.hstack(
-            (x_angles.reshape(-1, 1), y_angles.reshape(-1, 1), z_angles.reshape(-1, 1))
-        )  #   np.zeros((self.nbr_points, 1)), np.zeros((self.nbr_points, 1)),
+        self.cam_angles = np.hstack((x_angles.reshape(-1, 1), y_angles.reshape(-1, 1), z_angles.reshape(-1, 1)))
         return
 
     """ Camera and Image Creator """

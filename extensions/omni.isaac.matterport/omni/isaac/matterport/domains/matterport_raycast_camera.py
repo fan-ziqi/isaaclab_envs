@@ -1,23 +1,20 @@
-from omni.isaac.orbit.sensors.ray_caster import RayCasterCamera
-from omni.isaac.orbit.sensors.ray_caster.ray_caster_cfg import RayCasterCfg
-
 import os
-import trimesh
-import warp as wp
-import numpy as np
-import pandas as pd
-import torch
 from typing import Sequence
 
 import carb
+import numpy as np
 import omni.isaac.orbit.utils.math as math_utils
-from omni.isaac.orbit.utils.warp import raycast_mesh
-
+import pandas as pd
+import torch
+import trimesh
+import warp as wp
 from omni.isaac.matterport.domains import DATA_DIR
+from omni.isaac.orbit.sensors.ray_caster import RayCasterCamera
+from omni.isaac.orbit.sensors.ray_caster.ray_caster_cfg import RayCasterCfg
+from omni.isaac.orbit.utils.warp import raycast_mesh
 
 
 class MatterportRayCasterCamera(RayCasterCamera):
-    
     UNSUPPORTED_TYPES = {
         "rgb",
         "instance_id_segmentation",
@@ -54,17 +51,18 @@ class MatterportRayCasterCamera(RayCasterCamera):
     def _initialize_warp_meshes(self):
         # check if mesh is already loaded
         for mesh_prim_path in self.cfg.mesh_prim_paths:
-           
             if mesh_prim_path in self.meshes:
                 continue
-        
+
             # find ply
             if os.path.isabs(mesh_prim_path):
                 file_path = mesh_prim_path
                 assert os.path.isfile(mesh_prim_path), f"No .ply file found under absolute path: {mesh_prim_path}"
             else:
                 file_path = os.path.join(DATA_DIR, mesh_prim_path)
-                assert os.path.isfile(file_path), f"No .ply file found under relative path to extension data: {file_path}"
+                assert os.path.isfile(
+                    file_path
+                ), f"No .ply file found under relative path to extension data: {file_path}"
 
             # load ply
             curr_trimesh = trimesh.load(file_path)
@@ -82,7 +80,13 @@ class MatterportRayCasterCamera(RayCasterCamera):
                 indices=wp.array(curr_trimesh.faces.astype(np.int32).flatten(), dtype=int, device=self._device),
             )
             # save mesh
-            self.meshes[mesh_prim_path] = {"mesh": mesh_wp, "id": mesh_wp.id, "device": mesh_wp.device, "face_id_category_mapping": face_id_category_mapping, "trimesh": curr_trimesh}
+            self.meshes[mesh_prim_path] = {
+                "mesh": mesh_wp,
+                "id": mesh_wp.id,
+                "device": mesh_wp.device,
+                "face_id_category_mapping": face_id_category_mapping,
+                "trimesh": curr_trimesh,
+            }
 
     def _update_buffers_impl(self, env_ids: Sequence[int]):
         """Fills the buffers of the sensor data."""
@@ -133,8 +137,10 @@ class MatterportRayCasterCamera(RayCasterCamera):
             self._data.output["normals"][env_ids, :, :, 3] = 1.0
         if "semantic_segmentation" in self._data.output.keys():  # noqa: SIM118
             # get the category index of the hit faces (category index from unreduced set = ~1600 classes)
-            face_id = self.meshes[self.cfg.mesh_prim_paths[0]]["face_id_category_mapping"][ray_face_ids.flatten().type(torch.long)]
-            
+            face_id = self.meshes[self.cfg.mesh_prim_paths[0]]["face_id_category_mapping"][
+                ray_face_ids.flatten().type(torch.long)
+            ]
+
             # map category index to reduced set
             face_id_mpcat40 = self.mapping_mpcat40[face_id.type(torch.long) - 1]
 
@@ -142,7 +148,9 @@ class MatterportRayCasterCamera(RayCasterCamera):
             face_color = self.color[face_id_mpcat40]
 
             # reshape and transpose to get the correct orientation
-            self._data.output["semantic_segmentation"][env_ids] = face_color.reshape(self._view.count, self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height, 3).permute(0, 2, 1, 3)
+            self._data.output["semantic_segmentation"][env_ids] = face_color.reshape(
+                self._view.count, self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height, 3
+            ).permute(0, 2, 1, 3)
 
     def _create_annotator_data(self):
         """Create the buffers to store the annotator data.

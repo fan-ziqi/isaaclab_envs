@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -33,12 +32,13 @@ Rest everything follows.
 """
 
 import json
-import matplotlib as mpl
+from typing import Optional
+
 import cv2
+import matplotlib as mpl
 
 # python
 import numpy as np
-from typing import Optional
 
 # isaac-debug
 import omni.isaac.debug_draw._debug_draw as omni_debug_draw
@@ -53,10 +53,10 @@ from omni.isaac.carla.scripts import CarlaExplorer, CarlaLoader
 # isaac-orbit
 from omni.isaac.core.simulation_context import SimulationContext
 from omni.isaac.orbit.sensors.camera import Camera, PinholeCameraCfg
-
 from viplanner.config import TrainCfg, VIPlannerSemMetaHandler
 
 viplanner_sem_meta = VIPlannerSemMetaHandler()
+
 
 def sem_color_transfer(sem_image: np.ndarray, sem_idToLabels: dict) -> np.ndarray:
     """Convert semantic segmentation image to viplanner color space
@@ -101,6 +101,7 @@ def sem_color_transfer(sem_image: np.ndarray, sem_idToLabels: dict) -> np.ndarra
         return
 
     return sem_image
+
 
 if __name__ == "__main__":
     cfg_loader = CarlaLoaderConfig()
@@ -161,7 +162,7 @@ if __name__ == "__main__":
             usd_params=PinholeCameraCfg.UsdCameraCfg(
                 focal_length=10.0,
             ),
-            data_types = ["rgb", "semantic_segmentation", "distance_to_image_plane"]
+            data_types=["rgb", "semantic_segmentation", "distance_to_image_plane"],
         )
         camera = Camera(camera_cfg)
         camera.spawn("/World/camera")
@@ -169,7 +170,7 @@ if __name__ == "__main__":
         camera.set_world_pose_from_view(eye=eye, target=target_0)
         sim.reset()
         sim.play()
-        
+
         needed_steps = 0
         for curr_step in range(int((eye[1] - target_1[1]) / step_size)):
             if np.array(eye[1]) - np.array([curr_step * step_size]) > target_0[1]:
@@ -183,7 +184,7 @@ if __name__ == "__main__":
             for i in range(5):
                 sim.render()
             camera.update(0.0)
-                
+
             # collect image and transfer it to viplanner color space
             sem_image = camera.data.output["semantic_segmentation"]["data"]
             sem_idToLabels = camera.data.output["semantic_segmentation"]["info"]["idToLabels"]
@@ -199,22 +200,22 @@ if __name__ == "__main__":
             # save overlayed images
             assert cv2.imwrite(
                 os.path.join(
-                    os.path.join(sensor_save_paths, "semantic_segmentation"), "overlayed_step" + f"{curr_step}".zfill(5) + ".png"
+                    os.path.join(sensor_save_paths, "semantic_segmentation"),
+                    "overlayed_step" + f"{curr_step}".zfill(5) + ".png",
                 ),
                 cv2.cvtColor(rgb_sem_array, cv2.COLOR_BGR2RGB),
             )
 
             assert cv2.imwrite(
-                os.path.join(
-                    os.path.join(sensor_save_paths, "rgb"), "rgb_step" + f"{curr_step}".zfill(5) + ".png"
-                ),
+                os.path.join(os.path.join(sensor_save_paths, "rgb"), "rgb_step" + f"{curr_step}".zfill(5) + ".png"),
                 cv2.cvtColor(camera.data.output["rgb"].astype(np.uint8), cv2.COLOR_BGR2RGB),
             )
             depth_array = camera.data.output["distance_to_image_plane"]
             depth_array = np.clip(depth_array, 0, 15)
             assert cv2.imwrite(
                 os.path.join(
-                    os.path.join(sensor_save_paths, "distance_to_image_plane"), "depth_step" + f"{curr_step}".zfill(5) + ".png"
+                    os.path.join(sensor_save_paths, "distance_to_image_plane"),
+                    "depth_step" + f"{curr_step}".zfill(5) + ".png",
                 ),
                 (depth_array * depth_scale).astype(np.uint16),
             )
@@ -225,7 +226,9 @@ if __name__ == "__main__":
     repeated_trajectories: Optional[int] = 5
     if show_trajectories:
         model_viplanner = "/home/pascal/viplanner/imperative_learning/models/plannernet_env2azQ1b91cZZ_cam_mount_ep100_inputDepSem_costSem_optimSGD_new_cam_mount_combi_lossWidthMod_wgoal4.0_warehouse/eval_Town01_Opt_paper"
-        model_iplanner = "/home/pascal/viplanner/imperative_learning/code/iPlanner/iplanner/models/eval_Town01_Opt_paper"
+        model_iplanner = (
+            "/home/pascal/viplanner/imperative_learning/code/iPlanner/iplanner/models/eval_Town01_Opt_paper"
+        )
         path_files = [file for file in os.listdir(model_viplanner + "/repeat_0") if file.startswith("waypoint")]
         path_files.sort()
         waypoint_file = "/home/pascal/viplanner/imperative_learning/data/waypoints/crosswalk_paper_changed.json"  # crosswalk_paper_extended_5.json

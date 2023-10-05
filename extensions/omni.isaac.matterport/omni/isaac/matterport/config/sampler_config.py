@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -6,11 +5,11 @@
 @brief      Config for Exploration/ Data Sampling in Matterport3D Dataset
 """
 
-import torch
-
 # python
 from dataclasses import dataclass
 from typing import Optional, Tuple
+
+import torch
 
 
 @dataclass
@@ -43,7 +42,7 @@ class SamplerCfg:
 
     # DEPTH CAMERA
     cam_depth_prim: str = "/cam_depth"
-    cam_depth_resolution: Tuple[int, int] = (848, 480)  #  (width, height)
+    cam_depth_resolution: Tuple[int, int] = (848, 480)  # (width, height)
     cam_depth_focal_length: float = 1.93  # in mm
     # ANYmal D wide_angle_camera: 1.0 <-> ANYmal C realsense: 1.93 <-> RealSense D455: 1.93
     cam_depth_clipping_range: Tuple[float, float] = (0.01, 1000.0)

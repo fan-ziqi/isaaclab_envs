@@ -23,7 +23,6 @@ repos:
       - id: check-toml
       - id: end-of-file-fixer
       - id: check-shebang-scripts-are-executable
-        exclude: ^bin/submodules/
       - id: detect-private-key
       - id: debug-statements
   - repo: https://github.com/pycqa/isort
@@ -41,7 +40,7 @@ repos:
     rev: v2.2.4
     hooks:
       - id: codespell
-        exclude: ^ros/joystick_drivers/
+        exclude: ^extensions/omni.isaac.matterport/data/
         additional_dependencies:
         - tomli
   # FIXME: Figure out why this is getting stuck under VPN.

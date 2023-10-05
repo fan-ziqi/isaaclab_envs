@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@ethz.ch
@@ -18,17 +17,13 @@ import carb
 import omni
 import omni.client
 import omni.ext
+import omni.isaac.core.utils.stage as stage_utils
 
 # isaac-core
 import omni.ui as ui
-
-# omni-isaac-matterport
-from .ext_cfg import MatterportExtConfig
-from .matterport_domains import MatterportDomains
 from omni.isaac.matterport.domains import MatterportImporter
 from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
-from omni.isaac.orbit.sim import SimulationContext, SimulationCfg
-import omni.isaac.core.utils.stage as stage_utils
+from omni.isaac.orbit.sim import SimulationCfg, SimulationContext
 
 # omni-isaac-ui
 from omni.isaac.ui.ui_utils import (
@@ -41,6 +36,10 @@ from omni.isaac.ui.ui_utils import (
     setup_ui_headers,
     str_builder,
 )
+
+# omni-isaac-matterport
+from .ext_cfg import MatterportExtConfig
+from .matterport_domains import MatterportDomains
 
 EXTENSION_NAME = "Matterport Importer"
 
@@ -308,7 +307,7 @@ class MatterPortExtension(omni.ext.IExt):
 
     def _build_viz_ui(self):
         frame = ui.CollapsableFrame(
-            title="Visuaization",
+            title="Visualization",
             height=0,
             collapsed=False,
             style=get_style(),
@@ -329,7 +328,7 @@ class MatterPortExtension(omni.ext.IExt):
                     items=list(self.domains.cameras.keys()),
                     default_val=list(self.domains.cameras.keys())[0],
                     on_clicked_fn=lambda mode_str, config=self._config: config.set_visualization_prim(mode_str),
-                    tooltip="Select the camera prim shown in the visuaization window",
+                    tooltip="Select the camera prim shown in the visualization window",
                 )
 
     ##
@@ -365,7 +364,6 @@ class MatterPortExtension(omni.ext.IExt):
             self.ply_proposal = ply_file
         except FileNotFoundError:
             carb.log_verbose("No ply file found in default matterport datastructure")
-        
 
     ##
     # Load Mesh and Point-Cloud
@@ -409,14 +407,13 @@ class MatterPortExtension(omni.ext.IExt):
             ), f"No .obj or .usd file found under relative path to extension data: {file_path}"
             self._config.set_obj_filepath(file_path)  # update config
         carb.log_verbose("MatterPort 3D Mesh found, start loading...")
-        
+
         self._matterport = MatterportImporter(self._config.importer)
         asyncio.ensure_future(self.load_matterport())
 
         carb.log_info("MatterPort 3D Mesh loaded")
         self.build_ui(build_cam=True)
         self._input_fields["import_btn"].enabled = False
-
 
     ##
     # Register Cameras
@@ -439,13 +436,13 @@ class MatterPortExtension(omni.ext.IExt):
             data_types += ["semantic_segmentation"]
         if camera_depth:
             data_types += ["distance_to_image_plane"]
-        
+
         camera_pattern_cfg = patterns.PinholeCameraPatternCfg(
             focal_length=24.0,
             horizontal_aperture=20.955,
             height=camera_height,
             width=camera_width,
-            data_types=data_types
+            data_types=data_types,
         )
         camera_cfg = RayCasterCfg(
             prim_path=camera_path,
@@ -463,7 +460,7 @@ class MatterPortExtension(omni.ext.IExt):
 
         # initialize physics handles
         self.sim.reset()
-    
+
         # allow for tasks
         self.build_ui(build_cam=True, build_viz=True)
         return

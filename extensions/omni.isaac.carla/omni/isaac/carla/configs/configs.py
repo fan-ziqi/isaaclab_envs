@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -9,7 +8,7 @@
 # python
 import os
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 # isaac-orbit
 from omni.isaac.orbit.sensors.camera import PinholeCameraCfg

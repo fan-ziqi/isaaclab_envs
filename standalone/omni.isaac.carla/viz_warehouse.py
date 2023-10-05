@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -32,11 +31,12 @@ launcher = SimulationApp(config)
 Rest everything follows.
 """
 import json
+from typing import Optional
+
 import matplotlib as mpl
 
 # python
 import numpy as np
-from typing import Optional
 
 # isaac-debug
 import omni.isaac.debug_draw._debug_draw as omni_debug_draw
@@ -48,7 +48,6 @@ from omni.isaac.carla.scripts import CarlaLoader
 
 # isaac-orbit
 from omni.isaac.core.simulation_context import SimulationContext
-
 from omni.isaac.orbit.sensors.camera import Camera, PinholeCameraCfg
 
 if __name__ == "__main__":

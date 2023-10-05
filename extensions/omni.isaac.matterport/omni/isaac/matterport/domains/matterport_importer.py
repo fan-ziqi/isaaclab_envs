@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -6,25 +5,27 @@
 @brief      World for Matterport3D Extension in Omniverse-Isaac Sim
 """
 
+import builtins
+
 # python
 import os
 from typing import TYPE_CHECKING
 
 # omni
 import carb
-import builtins
 import omni.isaac.core.utils.prims as prim_utils
 import omni.isaac.core.utils.stage as stage_utils
+import omni.isaac.orbit.sim as sim_utils
 
 # isaac-orbit
 from omni.isaac.orbit.terrains import TerrainImporter
-import omni.isaac.orbit.sim as sim_utils
 
 if TYPE_CHECKING:
     from omni.isaac.matterport.config import MatterportImporterCfg
 
 # omniverse
 from omni.isaac.core.utils import extensions
+
 extensions.enable_extension("omni.kit.asset_converter")
 import omni.kit.asset_converter as converter
 
@@ -56,7 +57,7 @@ class MatterportConverter:
                 f"with status {detailed_status_code} and error {detailed_status_error_string}"
             )
         return
-    
+
 
 class MatterportImporter(TerrainImporter):
     """
@@ -73,16 +74,16 @@ class MatterportImporter(TerrainImporter):
         super().__init__(cfg)
 
         # Converter
-        self.converter: MatterportConverter = MatterportConverter(
-            self.cfg.obj_filepath, self.cfg.asset_converter
-        )
+        self.converter: MatterportConverter = MatterportConverter(self.cfg.obj_filepath, self.cfg.asset_converter)
         return
 
     def _import(self):
         if not self.cfg.terrain_type == "matterport":
-            raise ValueError("MatterportImporter can only import 'matterport' data. Given terrain type "
-                             f"'{self.cfg.terrain_type}'is not supported.")
-        
+            raise ValueError(
+                "MatterportImporter can only import 'matterport' data. Given terrain type "
+                f"'{self.cfg.terrain_type}'is not supported."
+            )
+
         if builtins.ISAAC_LAUNCHED_FROM_TERMINAL is False:
             self.load_world()
         else:

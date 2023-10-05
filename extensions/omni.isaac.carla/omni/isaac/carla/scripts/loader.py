@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
@@ -8,8 +7,6 @@
 
 # python
 import os
-import scipy.spatial.transform as tf
-import yaml
 from typing import List, Tuple
 
 # omniverse
@@ -17,9 +14,11 @@ import carb
 import omni
 import omni.isaac.core.utils.prims as prim_utils
 import omni.isaac.debug_draw._debug_draw as omni_debug_draw
+import scipy.spatial.transform as tf
+import yaml
 
 # isaac-carla
-from omni.isaac.carla.configs import DATA_DIR, CarlaLoaderConfig
+from omni.isaac.carla.configs import CarlaLoaderConfig
 
 # isaac-core
 from omni.isaac.core.materials import PhysicsMaterial
@@ -28,13 +27,11 @@ from omni.isaac.core.prims import GeometryPrim
 from omni.isaac.core.simulation_context import SimulationContext
 from omni.isaac.core.utils.semantics import add_update_semantics, remove_all_semantics
 from omni.isaac.core.utils.viewports import set_camera_view
-from omni.physx.scripts import utils as physx_utils
-from pxr import Gf, PhysxSchema, Usd
-
 from omni.isaac.orbit.utils.assets import ISAAC_NUCLEUS_DIR
 
 # isaac-orbit
 from omni.isaac.orbit.utils.configclass import class_to_dict
+from pxr import Gf, PhysxSchema, Usd
 
 
 class CarlaLoader:
@@ -99,7 +96,7 @@ class CarlaLoader:
 
         # physics material
         self.material = PhysicsMaterial(
-            f"/World/PhysicsMaterial", static_friction=0.7, dynamic_friction=0.7, restitution=0
+            "/World/PhysicsMaterial", static_friction=0.7, dynamic_friction=0.7, restitution=0
         )
         # enable patch-friction: yields better results!
         physx_material_api = PhysxSchema.PhysxMaterialAPI.Apply(self.material._prim)
@@ -163,7 +160,8 @@ class CarlaLoader:
         carb.log_info(f"Total of {len(mesh_prims)} meshes in the scene, start assigning semantic class ...")
 
         # mapping from prim name to class
-        class_keywords = yaml.safe_load(open(self._cfg.sem_mesh_to_class_map))
+        with open(self._cfg.sem_mesh_to_class_map) as file:
+            class_keywords = yaml.safe_load(file)
 
         # make all the string lower case
         mesh_prims_name = [mesh_prim_single.lower() for mesh_prim_single in mesh_prims_name]
@@ -276,7 +274,8 @@ class CarlaLoader:
 
     def _insert_vehicles(self):
         # load vehicle config file
-        vehicle_cfg: dict = yaml.safe_load(open(self._cfg.vehicle_config_file))
+        with open(self._cfg.vehicle_config_file) as file:
+            vehicle_cfg: dict = yaml.safe_load(file)
 
         # get the stage
         stage = omni.usd.get_context().get_stage()
@@ -322,12 +321,8 @@ class CarlaLoader:
 
     def _insert_people(self):
         # load people config file
-        people_cfg: dict = yaml.safe_load(open(self._cfg.people_config_file))
-
-        # if self._cfg.scale == 1.0:
-        #     scale_people = 100
-        # else:
-        #     scale_people = 1
+        with open(self._cfg.people_config_file) as file:
+            people_cfg: dict = yaml.safe_load(file)
 
         for key, person_cfg in people_cfg.items():
             carb.log_verbose(f"Insert person '{key}'")

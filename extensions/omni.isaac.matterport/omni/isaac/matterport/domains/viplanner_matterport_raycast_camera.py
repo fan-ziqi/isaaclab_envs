@@ -1,9 +1,8 @@
-        
-import yaml
 import torch
-
-from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg
+import yaml
 from omni.isaac.matterport.utils import DATA_DIR
+from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg
+
 from .matterport_raycast_camera import MatterportRayCasterCamera
 
 try:
@@ -15,7 +14,7 @@ except ImportError:
 class VIPlannerMatterportRayCasterCamera(MatterportRayCasterCamera):
     def __init__(self, cfg: RayCasterCfg):
         super().__init__(cfg)
-    
+
     def _color_mapping(self):
         viplanner_sem = VIPlannerSemMetaHandler()
         map_mpcat40_to_vip_sem = yaml.safe_load(open(DATA_DIR + "/mappings/mpcat40_to_vip_sem.yml"))
