@@ -1,8 +1,10 @@
+# Copyright (c) 2023 ETH Zurich (Robotics Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
 """
-@author     Pascal Roth
-@email      rothpa@student.ethz.ch
-
-@brief      Config for Exploration/ Data Sampling in Matterport3D Dataset
+Config for Exploration/ Data Sampling in Matterport3D Dataset
 """
 
 # python

@@ -10,7 +10,7 @@ import gc
 
 # python
 import os
-
+import torch
 import carb
 
 # omni
@@ -18,6 +18,7 @@ import omni
 import omni.client
 import omni.ext
 import omni.isaac.core.utils.stage as stage_utils
+import omni.isaac.core.utils.prims as prim_utils
 
 # isaac-core
 import omni.ui as ui
@@ -143,13 +144,6 @@ class MatterPortExtension(omni.ext.IExt):
         )
         with frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
-                # colliders
-                cb_builder(
-                    label="Enable Colliders",
-                    tooltip="Import Mesh with Colliders and Physics Materials",
-                    on_clicked_fn=lambda m, config=self._config: config.set_colliders(m),
-                    default_val=self._config.colliders,
-                )
                 # PhysicsMaterial
                 self._input_fields["friction_dynamic"] = float_builder(
                     "Dynamic Friction",
@@ -175,17 +169,18 @@ class MatterPortExtension(omni.ext.IExt):
                 self._input_fields["restitution"].add_value_changed_fn(
                     lambda m, config=self._config: config.set_restitution(m.get_value_as_float())
                 )
+                friction_restitution_options = ["average", "min", "multiply", "max"]
                 dropdown_builder(
                     "Friction Combine Mode",
-                    items=["average", "min", "multiply", "max"],
-                    default_val=self._config.importer.physics_material.friction_combine_mode,
+                    items=friction_restitution_options,
+                    default_val=friction_restitution_options.index(self._config.importer.physics_material.friction_combine_mode),
                     on_clicked_fn=lambda mode_str, config=self._config: config.set_friction_combine_mode(mode_str),
                     tooltip=f"Sets the friction combine mode of the physics material (default: {self._config.importer.physics_material.friction_combine_mode})",
                 )
                 dropdown_builder(
                     "Restitution Combine Mode",
-                    items=["average", "min", "multiply", "max"],
-                    default_val=self._config.importer.physics_material.restitution_combine_mode,
+                    items=friction_restitution_options,
+                    default_val=friction_restitution_options.index(self._config.importer.physics_material.restitution_combine_mode),
                     on_clicked_fn=lambda mode_str, config=self._config: config.set_restitution_combine_mode(mode_str),
                     tooltip=f"Sets the friction combine mode of the physics material (default: {self._config.importer.physics_material.restitution_combine_mode})",
                 )
@@ -285,18 +280,18 @@ class MatterPortExtension(omni.ext.IExt):
                     "use_folder_picker": False,
                 }
                 self._input_fields["camera_prim"] = str_builder(**kwargs)
-                self._input_fields["camera_prim"].add_value_changed_fn(self._check_cam_prim)
+                self._input_fields["camera_prim"].add_value_changed_fn(self.activate_load_camera)
 
                 self._input_fields["cam_height"] = int_builder(
                     "Camera Height in Pixels",
-                    default_val=CameraData.get_default_height(),
-                    tooltip=f"Set the height of the camera image plane in pixels (default: {CameraData.get_default_height()})",
+                    default_val=480,
+                    tooltip="Set the height of the camera image plane in pixels (default: 480)",
                 )
 
                 self._input_fields["cam_width"] = int_builder(
                     "Camera Width in Pixels",
-                    default_val=CameraData.get_default_width(),
-                    tooltip=f"Set the width of the camera image plane in pixels (default: {CameraData.get_default_width()})",
+                    default_val=640,
+                    tooltip="Set the width of the camera image plane in pixels (default: 640)",
                 )
 
                 self._input_fields["load_camera"] = btn_builder(
@@ -326,7 +321,7 @@ class MatterPortExtension(omni.ext.IExt):
                 dropdown_builder(
                     "Shown Camera Prim",
                     items=list(self.domains.cameras.keys()),
-                    default_val=list(self.domains.cameras.keys())[0],
+                    default_val=0,
                     on_clicked_fn=lambda mode_str, config=self._config: config.set_visualization_prim(mode_str),
                     tooltip="Select the camera prim shown in the visualization window",
                 )
@@ -339,6 +334,10 @@ class MatterPortExtension(omni.ext.IExt):
         if self._window:
             self._window = None
         gc.collect()
+        stage_utils.clear_stage()
+
+        if self.domains is not None and self.domains.callback_set:
+            self.domains.set_domain_callback(True)
 
     ##
     # Path Helpers
@@ -370,9 +369,6 @@ class MatterPortExtension(omni.ext.IExt):
     ##
 
     async def load_matterport(self):
-        # create new stage
-        await stage_utils.create_new_stage_async()
-
         # simulation settings
         # check if simulation context was created earlier or not.
         if SimulationContext.instance():
@@ -384,6 +380,7 @@ class MatterPortExtension(omni.ext.IExt):
         # initialize simulation
         await self.sim.initialize_simulation_context_async()
         # load matterport
+        self._matterport = MatterportImporter(self._config.importer)
         await self._matterport.load_world_async()
 
         # reset the simulator
@@ -392,7 +389,7 @@ class MatterPortExtension(omni.ext.IExt):
         await self.sim.pause_async()
 
     def _start_loading(self):
-        path = self._config.obj_filepath
+        path = self._config.importer.obj_filepath
         if not path:
             return
 
@@ -408,7 +405,6 @@ class MatterPortExtension(omni.ext.IExt):
             self._config.set_obj_filepath(file_path)  # update config
         carb.log_verbose("MatterPort 3D Mesh found, start loading...")
 
-        self._matterport = MatterportImporter(self._config.importer)
         asyncio.ensure_future(self.load_matterport())
 
         carb.log_info("MatterPort 3D Mesh loaded")
@@ -419,12 +415,18 @@ class MatterPortExtension(omni.ext.IExt):
     # Register Cameras
     ##
 
+    def activate_load_camera(self, val):
+        self._input_fields["load_camera"].enabled = True
+
     def _register_camera(self):
         ply_filepath = self._input_fields["input_ply_file"].get_value_as_string()
         if not is_ply_file(ply_filepath):
             carb.log_error("Given ply path is not valid! No camera created!")
 
         camera_path = self._input_fields["camera_prim"].get_value_as_string()
+        if not prim_utils.is_prim_path_valid(camera_path):  # create prim if no prim found
+            prim_utils.create_prim(camera_path, "Xform")
+
         camera_semantics = self._input_fields["camera_semantics"].get_value_as_bool()
         camera_depth = self._input_fields["camera_depth"].get_value_as_bool()
         camera_width = self._input_fields["cam_width"].get_value_as_int()
@@ -460,7 +462,7 @@ class MatterPortExtension(omni.ext.IExt):
 
         # initialize physics handles
         self.sim.reset()
-
+        
         # allow for tasks
         self.build_ui(build_cam=True, build_viz=True)
         return

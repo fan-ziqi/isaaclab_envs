@@ -9,6 +9,7 @@ INSTALL_REQUIRES = [
     "trimesh",
     "PyQt5",
     "matplotlib>=3.5.0",
+    "pandas",
 ]
 
 # Installation operation

@@ -2,7 +2,7 @@
 @author     Pascal Roth
 @email      rothpa@student.ethz.ch
 
-@brief      Vizualize Carla Dataset with Scale and Orientation defined in omni.isaac.carla.configs.configs.py
+@brief      Visualize Carla Dataset with Scale and Orientation defined in omni.isaac.carla.configs.configs.py
 """
 
 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
             sem_image = camera.data.output["semantic_segmentation"]["data"]
             sem_idToLabels = camera.data.output["semantic_segmentation"]["info"]["idToLabels"]
             data_array = sem_color_transfer(sem_image, sem_idToLabels)
-            # overlayed rgb and semantics
+            # overlaid rgb and semantics
             rgb_sem_array = cv2.addWeighted(
                 camera.data.output["rgb"].astype(np.uint8)[:, :, :3],
                 0.6,
@@ -197,7 +197,7 @@ if __name__ == "__main__":
                 0.4,
                 0,
             )
-            # save overlayed images
+            # save overlaid images
             assert cv2.imwrite(
                 os.path.join(
                     os.path.join(sensor_save_paths, "semantic_segmentation"),

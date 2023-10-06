@@ -8,6 +8,8 @@
 from typing import Dict
 
 import carb
+import omni
+import torch
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -44,7 +46,21 @@ class MatterportDomains:
         self.figures = {}
 
         # internal parameters
-        self._save_counter: int = 0
+        self.callback_set = False
+        self.vis_init = False
+        self.prev_position = torch.zeros(3)
+        self.prev_orientation = torch.zeros(4)
+
+        # add callbacks for stage play/stop
+        physx_interface = omni.physx.acquire_physx_interface()
+        self._initialize_handle = physx_interface.get_simulation_event_stream_v2().create_subscription_to_pop_by_type(
+            int(omni.physx.bindings._physx.SimulationEvent.RESUMED), self._initialize_callback
+        )
+        self._invalidate_initialize_handle = (
+            physx_interface.get_simulation_event_stream_v2().create_subscription_to_pop_by_type(
+                int(omni.physx.bindings._physx.SimulationEvent.STOPPED), self._invalidate_initialize_callback
+            )
+        )
         return
 
     ##
@@ -61,9 +77,16 @@ class MatterportDomains:
     ##
     # Callback Setup
     ##
-
-    def set_domain_callback(self, val):
-        # check for camera
+    def _invalidate_initialize_callback(self, val):
+        if self.callback_set:
+            self._sim.remove_render_callback("matterport_update")
+            self.callback_set = False
+        
+    def _initialize_callback(self, val):
+        if self.callback_set:
+            return
+        
+        #  check for camera
         if len(self.cameras) == 0:
             carb.log_warn("No cameras added! Add cameras first, then enable the callback!")
             return
@@ -75,23 +98,24 @@ class MatterportDomains:
             carb.log_error("No Simulation Context found! Matterport Callback not attached!")
 
         # add callback
-        if val:
-            self._sim.pause()
-            self._sim.add_render_callback("matterport_update", callback_fn=self._update)
-        else:
-            self._sim.add_render_callback("matterport_update")
+        self._sim.add_render_callback("matterport_update", callback_fn=self._update)
+        self.callback_set = True
 
     ##
     # Callback Function
     ##
 
     def _update(self, dt: float):
-        for camera in self.cameras:
-            camera.update(dt)
+        for camera in self.cameras.values():
+            camera.update(dt.payload["dt"])
 
         if self._cfg.visualize:
-            self._update_visualization(self.cameras[self._cfg.visualize_prim].data)
-            self.max_depth = self.cameras[self._cfg.visualize_prim].cfg.max_distance
+            vis_prim = self._cfg.visualize_prim if self._cfg.visualize_prim else list(self.cameras.keys())[0]
+            if torch.all(self.cameras[vis_prim].data.pos_w.cpu() == self.prev_position) and torch.all(self.cameras[vis_prim].data.quat_w_world.cpu() == self.prev_orientation):
+                return
+            self._update_visualization(self.cameras[vis_prim].data)
+            self.prev_position = self.cameras[vis_prim].data.pos_w.clone().cpu()
+            self.prev_orientation = self.cameras[vis_prim].data.quat_w_world.clone().cpu()
 
     ##
     # Private Methods (Helper Functions)
@@ -102,8 +126,8 @@ class MatterportDomains:
     def _init_visualization(self, data: CameraData):
         """Initializes the visualization plane."""
         # init depth figure
-        self.n_bins = 100  # Number of bins in the colormap
-        self.color_array = mpl.colormaps["jet"](np.linspace(0, 1, self.n_bins))  # Colormap
+        self.n_bins = 500  # Number of bins in the colormap
+        self.color_array = mpl.colormaps["gist_rainbow"](np.linspace(0, 1, self.n_bins))  # Colormap
 
         if "semantic_segmentation" in data.output.keys():  # noqa: SIM118
             # init semantics figure
@@ -142,18 +166,19 @@ class MatterportDomains:
             # DEPTH
             if "distance_to_image_plane" in data.output.keys():  # noqa: SIM118
                 # cam_data.img_depth.set_array(cam_data.render_depth)
-                self.figures["depth"]["fig"].set_array(
+                self.figures["depth"]["img"].set_array(
                     self.convert_depth_to_color(data.output["distance_to_image_plane"][0])
                 )
-                self.figures["depth"]["img"].canvas.draw()
-                self.figures["depth"]["img"].canvas.flush_events()
+                self.figures["depth"]["fig"].canvas.draw()
+                self.figures["depth"]["fig"].canvas.flush_events()
 
-        plt.pause(0.000001)
+        plt.pause(1e-6)
 
     def convert_depth_to_color(self, depth_img):
         depth_img = depth_img.cpu().numpy()
-        depth_img_flattend = np.clip(depth_img.flatten(), a_min=0, a_max=self.max_depth)
-        depth_img_flattend = np.round(depth_img_flattend / self.max_depth * (self.n_bins - 1)).astype(np.int32)
+        depth_img[~np.isfinite(depth_img)] = depth_img.max()
+        depth_img_flattend = np.clip(depth_img.flatten(), a_min=0, a_max=depth_img.max())
+        depth_img_flattend = np.round(depth_img_flattend / depth_img.max() * (self.n_bins - 1)).astype(np.int32)
         depth_colors = self.color_array[depth_img_flattend]
         depth_colors = depth_colors.reshape(depth_img.shape[0], depth_img.shape[1], 4)
         return depth_colors

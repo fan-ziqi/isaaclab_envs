@@ -1,3 +1,9 @@
+# Copyright (c) 2023 ETH Zurich (Robotics Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 from omni.isaac.core.utils import extensions
 from omni.isaac.matterport.domains import MatterportImporter
 from omni.isaac.orbit.terrains import TerrainImporterCfg

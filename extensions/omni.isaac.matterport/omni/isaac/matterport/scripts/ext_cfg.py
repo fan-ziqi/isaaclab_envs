@@ -7,17 +7,12 @@
 
 # python
 from dataclasses import dataclass
-
 from omni.isaac.matterport.config.importer_cfg import MatterportImporterCfg
-
-# orbit
-from omni.isaac.orbit.envs import ViewerCfg
 
 
 @dataclass
 class MatterportExtConfig:
     # config classes
-    viewer: ViewerCfg = ViewerCfg()
     importer: MatterportImporterCfg = MatterportImporterCfg()
     # semantic and depth inforamtion (can be changed individually for each camera)
     visualize: bool = False
@@ -44,9 +39,6 @@ class MatterportExtConfig:
 
     def set_obj_filepath(self, value: str):
         self.importer.obj_filepath = value
-
-    def set_import_file_ply(self, value: str):
-        self.importer.import_file_ply = value
 
     def set_prim_path(self, value: str):
         self.importer.prim_path = value

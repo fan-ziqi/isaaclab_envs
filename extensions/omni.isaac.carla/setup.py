@@ -25,5 +25,3 @@ setup(
     classifiers=["Natural Language :: English", "Programming Language :: Python :: 3.7"],
     zip_safe=False,
 )
-
-# EOF

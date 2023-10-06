@@ -121,6 +121,7 @@ def main():
 
     def convert_depth_to_color(depth_img):
         depth_img = depth_img.cpu().numpy()
+        depth_img[~np.isfinite(depth_img)] = 15
         depth_img_flattend = np.clip(depth_img.flatten(), a_min=0, a_max=15)
         depth_img_flattend = np.round(depth_img_flattend / 15 * (n_bins - 1)).astype(np.int32)
         depth_colors = colors[depth_img_flattend]
