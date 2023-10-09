@@ -89,6 +89,9 @@ class MatterportImporter(TerrainImporter):
         else:
             carb.log_info("[INFO]: Loading in extension mode requires calling 'load_world_async'")
 
+        if self.cfg.num_envs is not None: 
+            self.configure_env_origins()
+
     async def load_world_async(self) -> None:
         """Function called when clicking load buttton"""
         # create world
@@ -125,7 +128,7 @@ class MatterportImporter(TerrainImporter):
         )
 
         self._xform_prim = prim_utils.create_prim(
-            prim_path=self.cfg.prim_path, translation=(0.0, 0.0, 0.0), usd_path=base_path + ".usd"
+            prim_path=self.cfg.prim_path + "/Matterport", translation=(0.0, 0.0, 0.0), usd_path=base_path + ".usd"
         )
 
         # apply collider properties

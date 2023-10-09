@@ -1,9 +1,8 @@
 # configs
-from .configs import DATA_DIR, CarlaExplorerConfig, CarlaLoaderConfig
+from .configs import DATA_DIR, CarlaLoaderConfig
 
 __all__ = [
     # configs
-    "CarlaExplorerConfig",
     "CarlaLoaderConfig",
     # path
     "DATA_DIR",

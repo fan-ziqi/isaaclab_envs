@@ -98,9 +98,9 @@ class MatterportRayCasterCamera(RayCasterCamera):
         # update poses
         pos_w, quat_w = self._update_poses(env_ids)
         # full orientation is considered
-        ray_starts_w = math_utils.quat_apply(quat_w.repeat(1, self.num_rays), self.ray_starts[env_ids])
+        ray_starts_w = math_utils.quat_apply(quat_w.unsqueeze(1).repeat(1, self.num_rays, 1), self.ray_starts[env_ids])
         ray_starts_w += pos_w.unsqueeze(1)
-        ray_directions_w = math_utils.quat_apply(quat_w.repeat(1, self.num_rays), self.ray_directions[env_ids])
+        ray_directions_w = math_utils.quat_apply(quat_w.unsqueeze(1).repeat(1, self.num_rays, 1), self.ray_directions[env_ids])
         # ray cast and store the hits
         # TODO: Make this work for multiple meshes?
         self._ray_hits_w, ray_depth, ray_normal, ray_face_ids = raycast_mesh(
@@ -118,21 +118,21 @@ class MatterportRayCasterCamera(RayCasterCamera):
         if "distance_to_image_plane" in self._data.output.keys():  # noqa: SIM118
             distance_to_image_plane = torch.abs(
                 math_utils.quat_apply(
-                    math_utils.quat_inv(quat_w).repeat(1, self.num_rays),
-                    (ray_depth[:, :, None] * ray_directions_w - self._pixel_offset),
+                    math_utils.quat_inv(quat_w).unsqueeze(1).repeat(1, self.num_rays, 1),
+                    (ray_depth[:, :, None] * ray_directions_w - self._pixel_offset[env_ids]),
                 )[:, :, 0]
             )
             self._data.output["distance_to_image_plane"][env_ids] = distance_to_image_plane.view(
-                self._view.count, self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height
+                len(env_ids), self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height
             ).permute(0, 2, 1)
         if "distance_to_camera" in self._data.output.keys():  # noqa: SIM118
             self._data.output["distance_to_camera"][env_ids] = ray_depth.view(
-                self._view.count, self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height
+                len(env_ids), self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height
             ).permute(0, 2, 1)
         if "normals" in self._data.output.keys():  # noqa: SIM118
             # to comply with the replicator annotator format, a forth channel exists but it is unused
             self._data.output["normals"][env_ids, :, :, :3] = ray_normal.view(
-                self._view.count, self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height, 3
+                len(env_ids), self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height, 3
             ).permute(0, 2, 1, 3)
             self._data.output["normals"][env_ids, :, :, 3] = 1.0
         if "semantic_segmentation" in self._data.output.keys():  # noqa: SIM118
@@ -149,7 +149,7 @@ class MatterportRayCasterCamera(RayCasterCamera):
 
             # reshape and transpose to get the correct orientation
             self._data.output["semantic_segmentation"][env_ids] = face_color.reshape(
-                self._view.count, self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height, 3
+                len(env_ids), self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height, 3
             ).permute(0, 2, 1, 3)
 
     def _create_annotator_data(self):
