@@ -8,11 +8,11 @@
 from typing import Dict
 
 import carb
-import omni
-import torch
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import omni
+import torch
 from omni.isaac.matterport.domains.matterport_raycast_camera import (
     MatterportRayCasterCamera,
 )
@@ -81,11 +81,11 @@ class MatterportDomains:
         if self.callback_set:
             self._sim.remove_render_callback("matterport_update")
             self.callback_set = False
-        
+
     def _initialize_callback(self, val):
         if self.callback_set:
             return
-        
+
         #  check for camera
         if len(self.cameras) == 0:
             carb.log_warn("No cameras added! Add cameras first, then enable the callback!")
@@ -111,7 +111,9 @@ class MatterportDomains:
 
         if self._cfg.visualize:
             vis_prim = self._cfg.visualize_prim if self._cfg.visualize_prim else list(self.cameras.keys())[0]
-            if torch.all(self.cameras[vis_prim].data.pos_w.cpu() == self.prev_position) and torch.all(self.cameras[vis_prim].data.quat_w_world.cpu() == self.prev_orientation):
+            if torch.all(self.cameras[vis_prim].data.pos_w.cpu() == self.prev_position) and torch.all(
+                self.cameras[vis_prim].data.quat_w_world.cpu() == self.prev_orientation
+            ):
                 return
             self._update_visualization(self.cameras[vis_prim].data)
             self.prev_position = self.cameras[vis_prim].data.pos_w.clone().cpu()

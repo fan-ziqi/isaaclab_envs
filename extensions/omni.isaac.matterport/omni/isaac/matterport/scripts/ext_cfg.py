@@ -7,6 +7,7 @@
 
 # python
 from dataclasses import dataclass
+
 from omni.isaac.matterport.config.importer_cfg import MatterportImporterCfg
 
 
@@ -14,7 +15,7 @@ from omni.isaac.matterport.config.importer_cfg import MatterportImporterCfg
 class MatterportExtConfig:
     # config classes
     importer: MatterportImporterCfg = MatterportImporterCfg()
-    # semantic and depth inforamtion (can be changed individually for each camera)
+    # semantic and depth information (can be changed individually for each camera)
     visualize: bool = False
     visualize_prim: str = None
 

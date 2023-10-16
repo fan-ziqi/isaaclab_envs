@@ -89,11 +89,11 @@ class MatterportImporter(TerrainImporter):
         else:
             carb.log_info("[INFO]: Loading in extension mode requires calling 'load_world_async'")
 
-        if self.cfg.num_envs is not None: 
+        if self.cfg.num_envs is not None:
             self.configure_env_origins()
 
     async def load_world_async(self) -> None:
-        """Function called when clicking load buttton"""
+        """Function called when clicking load button"""
         # create world
         await self.load_matterport()
         # update stage for any remaining process.
@@ -103,7 +103,7 @@ class MatterportImporter(TerrainImporter):
         return
 
     def load_world(self) -> None:
-        """Function called when clicking load buttton"""
+        """Function called when clicking load button"""
         # create world
         self.load_matterport_sync()
         # update stage for any remaining process.

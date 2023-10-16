@@ -81,7 +81,7 @@ class CarlaLoaderConfig:
     scale: float = 0.01  # 0.01  # carla: 0.01 nomoko: 1  park: 0.01 warehouse: 1.0 # scale the scene to be in meters
     # up axis
     axis_up: str = "Y"  # carla, nomoko: "Y", park, warehouse: "Z"
-    # multipy crosswalks
+    # multiply crosswalks
     cw_config_file: Optional[str] = os.path.join(
         DATA_DIR, "town01", "cw_multiply_cfg.yml"
     )  # if None, no crosswalks are added
@@ -103,4 +103,3 @@ class CarlaLoaderConfig:
     @property
     def usd_path(self) -> str:
         return os.path.join(self.root_path, self.usd_name)
-

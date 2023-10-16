@@ -10,18 +10,19 @@ import gc
 
 # python
 import os
-import torch
+
 import carb
 
 # omni
 import omni
 import omni.client
 import omni.ext
-import omni.isaac.core.utils.stage as stage_utils
 import omni.isaac.core.utils.prims as prim_utils
+import omni.isaac.core.utils.stage as stage_utils
 
 # isaac-core
 import omni.ui as ui
+import torch
 from omni.isaac.matterport.domains import MatterportImporter
 from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
 from omni.isaac.orbit.sim import SimulationCfg, SimulationContext
@@ -81,7 +82,7 @@ class MatterPortExtension(omni.ext.IExt):
         self._config = MatterportExtConfig()
         self._extension_path = omni.kit.app.get_app().get_extension_manager().get_extension_path(ext_id)
 
-        # set additonal parameters
+        # set additional parameters
         self._input_fields: dict = {}  # dictionary to store values of buttion, float fields, etc.
         self.domains: MatterportDomains = None  # callback class for semantic rendering
         self.ply_proposal: str = ""
@@ -90,7 +91,7 @@ class MatterPortExtension(omni.ext.IExt):
         return
 
     ##
-    # UI Build functiions
+    # UI Build functions
     ##
 
     def build_ui(self, build_cam: bool = False, build_viz: bool = False):
@@ -148,7 +149,7 @@ class MatterPortExtension(omni.ext.IExt):
                 self._input_fields["friction_dynamic"] = float_builder(
                     "Dynamic Friction",
                     default_val=self._config.importer.physics_material.dynamic_friction,
-                    tooltip=f"Sets the dyanmic friction of the physics material (default: {self._config.importer.physics_material.dynamic_friction})",
+                    tooltip=f"Sets the dynamic friction of the physics material (default: {self._config.importer.physics_material.dynamic_friction})",
                 )
                 self._input_fields["friction_dynamic"].add_value_changed_fn(
                     lambda m, config=self._config: config.set_friction_dynamic(m.get_value_as_float())
@@ -173,14 +174,18 @@ class MatterPortExtension(omni.ext.IExt):
                 dropdown_builder(
                     "Friction Combine Mode",
                     items=friction_restitution_options,
-                    default_val=friction_restitution_options.index(self._config.importer.physics_material.friction_combine_mode),
+                    default_val=friction_restitution_options.index(
+                        self._config.importer.physics_material.friction_combine_mode
+                    ),
                     on_clicked_fn=lambda mode_str, config=self._config: config.set_friction_combine_mode(mode_str),
                     tooltip=f"Sets the friction combine mode of the physics material (default: {self._config.importer.physics_material.friction_combine_mode})",
                 )
                 dropdown_builder(
                     "Restitution Combine Mode",
                     items=friction_restitution_options,
-                    default_val=friction_restitution_options.index(self._config.importer.physics_material.restitution_combine_mode),
+                    default_val=friction_restitution_options.index(
+                        self._config.importer.physics_material.restitution_combine_mode
+                    ),
                     on_clicked_fn=lambda mode_str, config=self._config: config.set_restitution_combine_mode(mode_str),
                     tooltip=f"Sets the friction combine mode of the physics material (default: {self._config.importer.physics_material.restitution_combine_mode})",
                 )
@@ -462,7 +467,7 @@ class MatterPortExtension(omni.ext.IExt):
 
         # initialize physics handles
         self.sim.reset()
-        
+
         # allow for tasks
         self.build_ui(build_cam=True, build_viz=True)
         return

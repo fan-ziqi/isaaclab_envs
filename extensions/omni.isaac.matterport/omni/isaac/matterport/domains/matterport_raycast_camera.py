@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import os
-from typing import Sequence
+from typing import ClassVar, Sequence
 
 import carb
 import numpy as np
@@ -15,7 +17,7 @@ from omni.isaac.orbit.utils.warp import raycast_mesh
 
 
 class MatterportRayCasterCamera(RayCasterCamera):
-    UNSUPPORTED_TYPES = {
+    unsupported_types: ClassVar[dict] = {
         "rgb",
         "instance_id_segmentation",
         "instance_segmentation",
@@ -25,6 +27,10 @@ class MatterportRayCasterCamera(RayCasterCamera):
         "bounding_box_2d_loose",
         "bounding_box_3d",
     }
+    """Data types that are not supported by the ray-caster."""
+
+    face_id_category_mapping: ClassVar[dict] = {}
+    """Mapping from face id to semantic category id."""
 
     def __init__(self, cfg: RayCasterCfg):
         super().__init__(cfg)
@@ -51,7 +57,10 @@ class MatterportRayCasterCamera(RayCasterCamera):
     def _initialize_warp_meshes(self):
         # check if mesh is already loaded
         for mesh_prim_path in self.cfg.mesh_prim_paths:
-            if mesh_prim_path in self.meshes:
+            if (
+                mesh_prim_path in MatterportRayCasterCamera.meshes
+                and mesh_prim_path in MatterportRayCasterCamera.face_id_category_mapping
+            ):
                 continue
 
             # find ply
@@ -67,26 +76,26 @@ class MatterportRayCasterCamera(RayCasterCamera):
             # load ply
             curr_trimesh = trimesh.load(file_path)
 
-            # create mapping from face id to semantic categroy id
-            # get raw face information
-            faces_raw = curr_trimesh.metadata["_ply_raw"]["face"]["data"]
-            carb.log_info(f"Raw face information of type {faces_raw.dtype}")
-            # get face categories
-            face_id_category_mapping = torch.tensor([single_face[3] for single_face in faces_raw], device=self._device)
+            if mesh_prim_path not in MatterportRayCasterCamera.meshes:
+                # Convert trimesh into wp mesh
+                mesh_wp = wp.Mesh(
+                    points=wp.array(curr_trimesh.vertices.astype(np.float32), dtype=wp.vec3, device=self._device),
+                    indices=wp.array(curr_trimesh.faces.astype(np.int32).flatten(), dtype=int, device=self._device),
+                )
+                # save mesh
+                MatterportRayCasterCamera.meshes[mesh_prim_path] = mesh_wp
 
-            # Convert trimesh into wp mesh
-            mesh_wp = wp.Mesh(
-                points=wp.array(curr_trimesh.vertices.astype(np.float32), dtype=wp.vec3, device=self._device),
-                indices=wp.array(curr_trimesh.faces.astype(np.int32).flatten(), dtype=int, device=self._device),
-            )
-            # save mesh
-            self.meshes[mesh_prim_path] = {
-                "mesh": mesh_wp,
-                "id": mesh_wp.id,
-                "device": mesh_wp.device,
-                "face_id_category_mapping": face_id_category_mapping,
-                "trimesh": curr_trimesh,
-            }
+            if mesh_prim_path not in MatterportRayCasterCamera.face_id_category_mapping:
+                # create mapping from face id to semantic categroy id
+                # get raw face information
+                faces_raw = curr_trimesh.metadata["_ply_raw"]["face"]["data"]
+                carb.log_info(f"Raw face information of type {faces_raw.dtype}")
+                # get face categories
+                face_id_category_mapping = torch.tensor(
+                    [single_face[3] for single_face in faces_raw], device=self._device
+                )
+                # save mapping
+                MatterportRayCasterCamera.face_id_category_mapping[mesh_prim_path] = face_id_category_mapping
 
     def _update_buffers_impl(self, env_ids: Sequence[int]):
         """Fills the buffers of the sensor data."""
@@ -100,14 +109,15 @@ class MatterportRayCasterCamera(RayCasterCamera):
         # full orientation is considered
         ray_starts_w = math_utils.quat_apply(quat_w.unsqueeze(1).repeat(1, self.num_rays, 1), self.ray_starts[env_ids])
         ray_starts_w += pos_w.unsqueeze(1)
-        ray_directions_w = math_utils.quat_apply(quat_w.unsqueeze(1).repeat(1, self.num_rays, 1), self.ray_directions[env_ids])
+        ray_directions_w = math_utils.quat_apply(
+            quat_w.unsqueeze(1).repeat(1, self.num_rays, 1), self.ray_directions[env_ids]
+        )
         # ray cast and store the hits
         # TODO: Make this work for multiple meshes?
         self._ray_hits_w, ray_depth, ray_normal, ray_face_ids = raycast_mesh(
             ray_starts_w,
             ray_directions_w,
-            mesh_id=self.meshes[self.cfg.mesh_prim_paths[0]]["id"],
-            mesh_device=self.meshes[self.cfg.mesh_prim_paths[0]]["device"],
+            mesh=MatterportRayCasterCamera.meshes[self.cfg.mesh_prim_paths[0]],
             max_depth=self.cfg.max_distance,
             return_distance=True,
             return_normal=True,
@@ -137,7 +147,7 @@ class MatterportRayCasterCamera(RayCasterCamera):
             self._data.output["normals"][env_ids, :, :, 3] = 1.0
         if "semantic_segmentation" in self._data.output.keys():  # noqa: SIM118
             # get the category index of the hit faces (category index from unreduced set = ~1600 classes)
-            face_id = self.meshes[self.cfg.mesh_prim_paths[0]]["face_id_category_mapping"][
+            face_id = MatterportRayCasterCamera.meshes[self.cfg.mesh_prim_paths[0]]["face_id_category_mapping"][
                 ray_face_ids.flatten().type(torch.long)
             ]
 
