@@ -1,23 +1,26 @@
 from __future__ import annotations
 
 import os
-from typing import ClassVar, Sequence
+from typing import TYPE_CHECKING, ClassVar, Sequence
 
 import carb
 import numpy as np
+from tensordict import TensorDict
 import omni.isaac.orbit.utils.math as math_utils
 import pandas as pd
 import torch
 import trimesh
 import warp as wp
 from omni.isaac.matterport.domains import DATA_DIR
-from omni.isaac.orbit.sensors.ray_caster import RayCasterCamera
-from omni.isaac.orbit.sensors.ray_caster.ray_caster_cfg import RayCasterCfg
+from omni.isaac.orbit.sensors import RayCasterCamera
 from omni.isaac.orbit.utils.warp import raycast_mesh
+
+if TYPE_CHECKING:
+    from .raycaster_cfg import MatterportRayCasterCfg
 
 
 class MatterportRayCasterCamera(RayCasterCamera):
-    unsupported_types: ClassVar[dict] = {
+    UNSUPPORTED_TYPES: ClassVar[dict] = {
         "rgb",
         "instance_id_segmentation",
         "instance_segmentation",
@@ -32,8 +35,21 @@ class MatterportRayCasterCamera(RayCasterCamera):
     face_id_category_mapping: ClassVar[dict] = {}
     """Mapping from face id to semantic category id."""
 
-    def __init__(self, cfg: RayCasterCfg):
+    def __init__(self, cfg: MatterportRayCasterCfg):
+        # initialize base class
         super().__init__(cfg)
+
+    def _type_check(self):
+        # check if there is any intersection in unsupported types
+        # reason: we cannot obtain this data from simplified warp-based ray caster
+        common_elements = set(self.cfg.data_types) & MatterportRayCasterCamera.UNSUPPORTED_TYPES
+        if common_elements:
+            raise ValueError(
+                f"RayCasterCamera class does not support the following sensor types: {common_elements}."
+                "\n\tThis is because these sensor types cannot be obtained in a fast way using ''warp''."
+                "\n\tHint: If you need to work with these sensor types, we recommend using the USD camera"
+                " interface from the omni.isaac.orbit.sensors.camera module."
+            )
 
     def _initialize_impl(self):
         super()._initialize_impl()
@@ -99,83 +115,79 @@ class MatterportRayCasterCamera(RayCasterCamera):
 
     def _update_buffers_impl(self, env_ids: Sequence[int]):
         """Fills the buffers of the sensor data."""
-        # check camera prim exists
-        if not self._is_initialized:
-            raise RuntimeError("Camera is not initialized. Please call 'sim.play()' first.")
-        # Increment frame count
+        # increment frame count
         self._frame[env_ids] += 1
-        # update poses
-        pos_w, quat_w = self._update_poses(env_ids)
-        # full orientation is considered
-        ray_starts_w = math_utils.quat_apply(quat_w.unsqueeze(1).repeat(1, self.num_rays, 1), self.ray_starts[env_ids])
+
+        # compute poses from current view
+        pos_w, quat_w = self._compute_camera_world_poses(env_ids)
+        # update the data
+        self._data.pos_w[env_ids] = pos_w
+        self._data.quat_w_world[env_ids] = quat_w
+
+        # note: full orientation is considered
+        ray_starts_w = math_utils.quat_apply(quat_w.repeat(1, self.num_rays), self.ray_starts[env_ids])
         ray_starts_w += pos_w.unsqueeze(1)
-        ray_directions_w = math_utils.quat_apply(
-            quat_w.unsqueeze(1).repeat(1, self.num_rays, 1), self.ray_directions[env_ids]
-        )
+        ray_directions_w = math_utils.quat_apply(quat_w.repeat(1, self.num_rays), self.ray_directions[env_ids])
         # ray cast and store the hits
-        # TODO: Make this work for multiple meshes?
-        self._ray_hits_w, ray_depth, ray_normal, ray_face_ids = raycast_mesh(
+        # TODO: Make ray-casting work for multiple meshes?
+        # necessary for regular dictionaries.
+        self.ray_hits_w, ray_depth, ray_normal, ray_face_ids = raycast_mesh(
             ray_starts_w,
             ray_directions_w,
-            mesh=MatterportRayCasterCamera.meshes[self.cfg.mesh_prim_paths[0]],
-            max_depth=self.cfg.max_distance,
-            return_distance=True,
-            return_normal=True,
-            return_face_id=True,
+            mesh=RayCasterCamera.meshes[self.cfg.mesh_prim_paths[0]],
+            max_dist=self.cfg.max_distance,
+            return_distance=any(
+                [name in self.cfg.data_types for name in ["distance_to_image_plane", "distance_to_camera"]]
+            ),
+            return_normal="normals" in self.cfg.data_types,
+            return_face_id="semantic_segmentation" in self.cfg.data_types,
         )
-
-        # update buffers
-        if "distance_to_image_plane" in self._data.output.keys():  # noqa: SIM118
-            distance_to_image_plane = torch.abs(
+        # update output buffers
+        if "distance_to_image_plane" in self.cfg.data_types:
+            # note: data is in camera frame so we only take the first component (z-axis of camera frame)
+            distance_to_image_plane = (
                 math_utils.quat_apply(
-                    math_utils.quat_inv(quat_w).unsqueeze(1).repeat(1, self.num_rays, 1),
-                    (ray_depth[:, :, None] * ray_directions_w - self._pixel_offset[env_ids]),
-                )[:, :, 0]
-            )
-            self._data.output["distance_to_image_plane"][env_ids] = distance_to_image_plane.view(
-                len(env_ids), self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height
-            ).permute(0, 2, 1)
-        if "distance_to_camera" in self._data.output.keys():  # noqa: SIM118
-            self._data.output["distance_to_camera"][env_ids] = ray_depth.view(
-                len(env_ids), self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height
-            ).permute(0, 2, 1)
-        if "normals" in self._data.output.keys():  # noqa: SIM118
-            # to comply with the replicator annotator format, a forth channel exists but it is unused
-            self._data.output["normals"][env_ids, :, :, :3] = ray_normal.view(
-                len(env_ids), self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height, 3
-            ).permute(0, 2, 1, 3)
-            self._data.output["normals"][env_ids, :, :, 3] = 1.0
+                    math_utils.quat_inv(quat_w).repeat(1, self.num_rays),
+                    (ray_depth[:, :, None] * ray_directions_w),
+                )
+            )[:, :, 0]
+            self._data.output["distance_to_image_plane"][env_ids] = distance_to_image_plane.view(-1, *self.image_shape)
+        if "distance_to_camera" in self.cfg.data_types:
+            self._data.output["distance_to_camera"][env_ids] = ray_depth.view(-1, *self.image_shape)
+        if "normals" in self.cfg.data_types:
+            self._data.output["normals"][env_ids] = ray_normal.view(-1, *self.image_shape, 3)
         if "semantic_segmentation" in self._data.output.keys():  # noqa: SIM118
             # get the category index of the hit faces (category index from unreduced set = ~1600 classes)
-            face_id = MatterportRayCasterCamera.meshes[self.cfg.mesh_prim_paths[0]]["face_id_category_mapping"][
+            face_id = MatterportRayCasterCamera.face_id_category_mapping[self.cfg.mesh_prim_paths[0]][
                 ray_face_ids.flatten().type(torch.long)
             ]
-
             # map category index to reduced set
             face_id_mpcat40 = self.mapping_mpcat40[face_id.type(torch.long) - 1]
-
             # get the color of the face
             face_color = self.color[face_id_mpcat40]
-
             # reshape and transpose to get the correct orientation
-            self._data.output["semantic_segmentation"][env_ids] = face_color.reshape(
-                len(env_ids), self.cfg.pattern_cfg.width, self.cfg.pattern_cfg.height, 3
-            ).permute(0, 2, 1, 3)
+            self._data.output["semantic_segmentation"][env_ids] = face_color.view(-1, *self.image_shape, 3)
 
-    def _create_annotator_data(self):
-        """Create the buffers to store the annotator data.
-
-        We create a buffer for each annotator and store the data in a dictionary. Since the data
-        shape is not known beforehand, we create a list of buffers and concatenate them later.
-
-        This is an expensive operation and should be called only once.
-        """
-        for name in self.cfg.pattern_cfg.data_types:
+    def _create_buffers(self):
+        """Create the buffers to store data."""
+        # create the data object
+        # -- pose of the cameras
+        self._data.pos_w = torch.zeros((self._view.count, 3), device=self._device)
+        self._data.quat_w_world = torch.zeros((self._view.count, 4), device=self._device)
+        # -- intrinsic matrix
+        self._data.intrinsic_matrices = torch.zeros((self._view.count, 3, 3), device=self._device)
+        self._data.intrinsic_matrices[:, 2, 2] = 1.0
+        self._data.image_shape = self.image_shape
+        # -- output data
+        # create the buffers to store the annotator data.
+        self._data.output = TensorDict({}, batch_size=self._view.count, device=self.device)
+        self._data.info = [{name: None for name in self.cfg.data_types}] * self._view.count
+        for name in self.cfg.data_types:
             if name in ["distance_to_image_plane", "distance_to_camera"]:
                 shape = (self.cfg.pattern_cfg.height, self.cfg.pattern_cfg.width)
                 dtype = torch.float32
             elif name in ["normals"]:
-                shape = (self.cfg.pattern_cfg.height, self.cfg.pattern_cfg.width, 4)
+                shape = (self.cfg.pattern_cfg.height, self.cfg.pattern_cfg.width, 3)
                 dtype = torch.float32
             elif name in ["semantic_segmentation"]:
                 shape = (self.cfg.pattern_cfg.height, self.cfg.pattern_cfg.width, 3)

@@ -58,7 +58,7 @@ asset_converter_cfg.baking_scales = False
 
 @configclass
 class MatterportImporterCfg(TerrainImporterCfg):
-    cls_name: type = MatterportImporter
+    class_type: type = MatterportImporter
     """The class name of the terrain importer."""
 
     terrain_type: Literal["matterport"] = "matterport"

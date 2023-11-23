@@ -19,7 +19,7 @@ setup(
     description="Extension to include 3D Datasets from the Carla Simulator.",
     keywords=["robotics"],
     include_package_data=True,
-    python_requires="==3.7.*",
+    python_requires=">=3.7",
     install_requires=INSTALL_REQUIRES,
     packages=["omni.isaac.carla"],
     classifiers=["Natural Language :: English", "Programming Language :: Python :: 3.7"],

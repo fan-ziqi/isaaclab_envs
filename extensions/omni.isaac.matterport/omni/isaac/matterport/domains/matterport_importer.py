@@ -5,6 +5,8 @@
 @brief      World for Matterport3D Extension in Omniverse-Isaac Sim
 """
 
+from __future__ import annotations
+
 import builtins
 
 # python
@@ -15,9 +17,10 @@ from typing import TYPE_CHECKING
 import carb
 import omni.isaac.core.utils.prims as prim_utils
 import omni.isaac.core.utils.stage as stage_utils
-import omni.isaac.orbit.sim as sim_utils
+from omni.isaac.core.simulation_context import SimulationContext
 
 # isaac-orbit
+import omni.isaac.orbit.sim as sim_utils
 from omni.isaac.orbit.terrains import TerrainImporter
 
 if TYPE_CHECKING:
@@ -64,20 +67,23 @@ class MatterportImporter(TerrainImporter):
     Default stairs environment for testing
     """
 
-    cfg: object  # MatterportImporterCfg
+    cfg: MatterportImporterCfg
 
-    # def __init__(self, cfg: MatterportImporterCfg) -> None:  # FIX circular input
-    def __init__(self, cfg) -> None:
+    def __init__(self, cfg: MatterportImporterCfg) -> None:
         """
         :param
         """
-        super().__init__(cfg)
+        # store inputs
+        self.cfg = cfg
+        self.device = SimulationContext.instance().device
 
-        # Converter
-        self.converter: MatterportConverter = MatterportConverter(self.cfg.obj_filepath, self.cfg.asset_converter)
-        return
+        # create a dict of meshes
+        self.meshes = dict()
+        self.warp_meshes = dict()
+        self.env_origins = None
+        self.terrain_origins = None
 
-    def _import(self):
+        # import the world
         if not self.cfg.terrain_type == "matterport":
             raise ValueError(
                 "MatterportImporter can only import 'matterport' data. Given terrain type "
@@ -89,8 +95,15 @@ class MatterportImporter(TerrainImporter):
         else:
             carb.log_info("[INFO]: Loading in extension mode requires calling 'load_world_async'")
 
-        if self.cfg.num_envs is not None:
+        if isinstance(self.cfg.num_envs, int):
             self.configure_env_origins()
+        
+        # set initial state of debug visualization
+        self.set_debug_vis(self.cfg.debug_vis)
+
+        # Converter
+        self.converter: MatterportConverter = MatterportConverter(self.cfg.obj_filepath, self.cfg.asset_converter)
+        return
 
     async def load_world_async(self) -> None:
         """Function called when clicking load button"""
