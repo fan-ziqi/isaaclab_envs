@@ -12,11 +12,8 @@ import torch
 import trimesh
 import warp as wp
 from omni.isaac.matterport.domains import DATA_DIR
-from omni.isaac.orbit.sensors import RayCasterCamera
+from omni.isaac.orbit.sensors import RayCasterCamera, RayCasterCameraCfg
 from omni.isaac.orbit.utils.warp import raycast_mesh
-
-if TYPE_CHECKING:
-    from .raycaster_cfg import MatterportRayCasterCfg
 
 
 class MatterportRayCasterCamera(RayCasterCamera):
@@ -35,14 +32,14 @@ class MatterportRayCasterCamera(RayCasterCamera):
     face_id_category_mapping: ClassVar[dict] = {}
     """Mapping from face id to semantic category id."""
 
-    def __init__(self, cfg: MatterportRayCasterCfg):
+    def __init__(self, cfg: RayCasterCameraCfg):
         # initialize base class
         super().__init__(cfg)
 
-    def _type_check(self):
+    def _check_supported_data_types(self, cfg: RayCasterCameraCfg):
         # check if there is any intersection in unsupported types
         # reason: we cannot obtain this data from simplified warp-based ray caster
-        common_elements = set(self.cfg.data_types) & MatterportRayCasterCamera.UNSUPPORTED_TYPES
+        common_elements = set(cfg.data_types) & MatterportRayCasterCamera.UNSUPPORTED_TYPES
         if common_elements:
             raise ValueError(
                 f"RayCasterCamera class does not support the following sensor types: {common_elements}."
@@ -170,6 +167,8 @@ class MatterportRayCasterCamera(RayCasterCamera):
 
     def _create_buffers(self):
         """Create the buffers to store data."""
+        # prepare drift
+        self.drift = torch.zeros(self._view.count, 3, device=self.device)
         # create the data object
         # -- pose of the cameras
         self._data.pos_w = torch.zeros((self._view.count, 3), device=self._device)
