@@ -5,7 +5,7 @@
 
 ---
 
-# Omniverse Matterport3D and UnReal Engine Assets Extensions
+# Omniverse Matterport3D and Unreal Engine Assets Extensions
 
 [![IsaacSim](https://img.shields.io/badge/IsaacSim-2023.1.0--hotfix.1-silver.svg)](https://docs.omniverse.nvidia.com/isaacsim/latest/overview.html)
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://docs.python.org/3/whatsnew/3.10.html)
@@ -14,13 +14,13 @@
 [![License](https://img.shields.io/badge/license-BSD--3-yellow.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 This repository contains the extensions for Matterport3D and Unreal Engine Assets.
-The extensions should enable to easily load the assets into Isaac Sim, and have access to the semantic labels.
+The extensions enable the easy loading of assets into Isaac Sim and have access to the semantic labels.
 They are developed as part of the ViPlanner project ([Paper](https://arxiv.org/abs/2310.00982) | [Code](https://github.com/leggedrobotics/viplanner))
 and are based on the [Orbit](https://isaac-orbit.github.io/) framework.
 
 **Attention:** 
-The main part of the extensions is currently updated to the latest orbit version.
-This repo contains a temporary solution that is sufficient for the demo script included in ViPlanner, found [here](https://github.com/leggedrobotics/viplanner/tree/main/omniverse).
+The central part of the extensions is currently updated to the latest orbit version.
+This repo contains a temporary solution sufficient for the demo script included in ViPlanner, found [here](https://github.com/leggedrobotics/viplanner/tree/main/omniverse).
 An updated version will be available soon.
 
 
@@ -46,14 +46,14 @@ ln -s {ORBIT_ENVS_PROJECT_DIR}/extensions/omni.isaac.carla .
 
 ## Usage
 
-For the matterport extensions, a GUI interface is available. To use it, start the simulation:
+For the Matterport extension, a GUI interface is available. To use it, start the simulation:
 
 ```
 ./orbit.sh -s
 ```
 
-Then, in the GUI, go to `Window -> Extensions` and type in `Matterport` in the search bar. You should see the Matterport3D extension. 
-Enable it to open the GUI.
+Then, in the GUI, go to `Window -> Extensions` and type `Matterport` in the search bar. You should see the Matterport3D extension. 
+Enable it to open the GUI interface.
 
 To use both as part of an Orbit workflow, please refer to the [ViPlanner Demo](https://github.com/leggedrobotics/viplanner/tree/main/omniverse).
 
@@ -73,10 +73,10 @@ If you use this code in a scientific publication, please cite the following [pap
 
 ### License
 
-This code belongs to Robotic Systems Lab, ETH Zurich.
+This code belongs to the Robotic Systems Lab, ETH Zurich.
 All right reserved
 
 **Authors: [Pascal Roth](https://github.com/pascal-roth)<br />
 Maintainer: Pascal Roth, rothpa@ethz.ch**
 
-This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
+This repository contains research code, except that it changes often, and any fitness for a particular purpose is disclaimed.
