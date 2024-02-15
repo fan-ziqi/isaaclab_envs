@@ -18,7 +18,7 @@ The extensions enable the easy loading of assets into Isaac Sim and have access 
 They are developed as part of the ViPlanner project ([Paper](https://arxiv.org/abs/2310.00982) | [Code](https://github.com/leggedrobotics/viplanner))
 and are based on the [Orbit](https://isaac-orbit.github.io/) framework.
 
-**Attention:** 
+**Attention:**
 The central part of the extensions is currently updated to the latest orbit version.
 This repo contains a temporary solution sufficient for the demo script included in ViPlanner, found [here](https://github.com/leggedrobotics/viplanner/tree/main/omniverse).
 An updated version will be available soon.
@@ -52,7 +52,7 @@ For the Matterport extension, a GUI interface is available. To use it, start the
 ./orbit.sh -s
 ```
 
-Then, in the GUI, go to `Window -> Extensions` and type `Matterport` in the search bar. You should see the Matterport3D extension. 
+Then, in the GUI, go to `Window -> Extensions` and type `Matterport` in the search bar. You should see the Matterport3D extension.
 Enable it to open the GUI interface.
 
 To use both as part of an Orbit workflow, please refer to the [ViPlanner Demo](https://github.com/leggedrobotics/viplanner/tree/main/omniverse).
