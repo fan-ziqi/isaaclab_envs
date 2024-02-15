@@ -1,9 +1,8 @@
-"""
-@author     Pascal Roth
-@email      rothpa@student.ethz.ch
-
-@brief      Config for MatterPort3D Extension in Omniverse-Isaac Sim
-"""
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
 
 # python
 from dataclasses import dataclass

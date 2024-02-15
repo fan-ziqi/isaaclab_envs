@@ -1,9 +1,8 @@
-"""
-@author     Pascal Roth
-@email      rothpa@student.ethz.ch
-
-@brief      World for Matterport3D Extension in Omniverse-Isaac Sim
-"""
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
 
 from __future__ import annotations
 
@@ -17,10 +16,10 @@ from typing import TYPE_CHECKING
 import carb
 import omni.isaac.core.utils.prims as prim_utils
 import omni.isaac.core.utils.stage as stage_utils
-from omni.isaac.core.simulation_context import SimulationContext
 
 # isaac-orbit
 import omni.isaac.orbit.sim as sim_utils
+from omni.isaac.core.simulation_context import SimulationContext
 from omni.isaac.orbit.terrains import TerrainImporter
 
 if TYPE_CHECKING:
@@ -97,7 +96,7 @@ class MatterportImporter(TerrainImporter):
 
         if isinstance(self.cfg.num_envs, int):
             self.configure_env_origins()
-        
+
         # set initial state of debug visualization
         self.set_debug_vis(self.cfg.debug_vis)
 

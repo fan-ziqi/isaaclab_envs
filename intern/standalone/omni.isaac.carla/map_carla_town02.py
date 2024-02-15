@@ -1,8 +1,14 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 """
 @author     Pascal Roth
-@email      rothpa@student.ethz.ch
+@email      rothpa@ethz.ch
 
-@brief      Dense Mapping of Warehouse Datasets
+@brief      Dense Mapping of Carla Datasets
 """
 
 
@@ -22,7 +28,7 @@ from omni.isaac.kit import SimulationApp
 
 # add argparse arguments
 parser = argparse.ArgumentParser("Welcome to Orbit: Omniverse Robotics Environments!")
-parser.add_argument("--headless", action="store_false", default=False, help="Force display off at all times.")
+parser.add_argument("--headless", action="store_false", default=True, help="Force display off at all times.")
 args_cli = parser.parse_args()
 
 # launch omniverse app
@@ -41,24 +47,22 @@ from omni.isaac.carla.scripts import CarlaExplorer, CarlaLoader
 
 if __name__ == "__main__":
     cfg_loader = CarlaLoaderConfig(
-        root_path="/home/pascal/viplanner/env/warehouse",
-        usd_name="warehouse_multiple_shelves_without_ppl_ext_sem_space.usd",
-        suffix="",
-        prim_path="/World/Warehouse",
-        scale=1.0,
-        axis_up="Z",
-        cw_config_file=None,
-        sem_mesh_to_class_map=os.path.join(DATA_DIR, "warehouse", "keyword_mapping.yml"),
-        groundplane=False,
-        people_config_file=os.path.join(DATA_DIR, "warehouse", "people_cfg.yml"),
-        vehicle_config_file=None,
+        # carla map
+        root_path="/home/pascal/viplanner/env/carla/town02",
+        usd_name="Town02.usd",
+        suffix="/Town02",
+        # prim path for the carla map
+        prim_path="/World/Town02",
+        # multipy crosswalks
+        cw_config_file=os.path.join(DATA_DIR, "town02", "cw_multiply_cfg.yml"),
+        # mesh to semantic class mapping
+        sem_mesh_to_class_map=os.path.join(DATA_DIR, "town02", "keyword_mapping.yml"),
+        # multiply vehicles
+        vehicle_config_file=os.path.join(DATA_DIR, "town02", "vehicle_cfg.yml"),
     )
     cfg_explorer = CarlaExplorerConfig(
-        max_cam_recordings=500,
-        space_limiter="sm_wall",
-        indoor_filter=False,
-        output_dir_name="warehouse_multiple_shelves_without_ppl_ext_sem_space",
-        nb_more_people=0,
+        carla_filter=None,
+        output_dir_name="town02",
     )
 
     if cfg_loader.groundplane:

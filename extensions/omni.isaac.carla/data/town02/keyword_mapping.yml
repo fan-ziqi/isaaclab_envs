@@ -1,9 +1,6 @@
-###
-# @author     Pascal Roth
-# @email      rothpa@student.ethz.ch
-#
-# @brief      Mapping mesh keywords to VIPlanner semantic classes
-###
+
+
+# Mapping mesh keywords to VIPlanner semantic classes
 
 road:
   - Road_Road

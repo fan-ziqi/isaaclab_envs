@@ -1,17 +1,12 @@
-"""
-@author     Pascal Roth
-@email      rothpa@student.ethz.ch
-
-@brief      Configs
-"""
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
 
 # python
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple
-
-# isaac-orbit
-from omni.isaac.orbit.sensors.camera import PinholeCameraCfg
 
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../data"))
 
@@ -70,33 +65,31 @@ class SimCfg:
 @dataclass
 class CarlaLoaderConfig:
     # carla map
-    root_path: str = "/home/pascal/viplanner/env/carla/town01"  #  "/home/pascal/viplanner/env/nomoko/zurich" "/home/orbit/Downloads/park2_nice"
-    usd_name: str = "Town01_Opt_paper.usd"  # "Zurich_3Dmodel.obj.usd"  "Showcase.usd"
-    suffix: str = "/Town01_Opt"  # carla: "/Town01_Opt"  nomoko: "/Zurich"  park, warehouse: ""
+    root_path: str = "path_to_unreal_mesh"
+    usd_name: str = "Town01_Opt.usd"
+    suffix: str = "/Town01_Opt"
     # prim path for the carla map
-    prim_path: str = "/World/Carla"  # "/World/nomoko"  "/World/Park"  "/World/Carla"
+    prim_path: str = "/World/Carla"
     # SimCfg
     sim_cfg: SimCfg = SimCfg()
     # scale
-    scale: float = 0.01  # 0.01  # carla: 0.01 nomoko: 1  park: 0.01 warehouse: 1.0 # scale the scene to be in meters
+    scale: float = 0.01  # scale the scene to be in meters
     # up axis
-    axis_up: str = "Y"  # carla, nomoko: "Y", park, warehouse: "Z"
+    axis_up: str = "Y"
     # multiply crosswalks
-    cw_config_file: Optional[str] = os.path.join(
+    cw_config_file: str | None = os.path.join(
         DATA_DIR, "town01", "cw_multiply_cfg.yml"
     )  # if None, no crosswalks are added
     # mesh to semantic class mapping --> only if set, semantic classes will be added to the scene
-    sem_mesh_to_class_map: Optional[str] = os.path.join(
+    sem_mesh_to_class_map: str | None = os.path.join(
         DATA_DIR, "town01", "keyword_mapping.yml"
     )  # os.path.join(DATA_DIR, "park", "keyword_mapping.yml")  os.path.join(DATA_DIR, "town01", "keyword_mapping.yml")
     # add Groundplane to the scene
     groundplane: bool = True
     # add people to the scene
-    people_config_file: Optional[str] = os.path.join(
-        DATA_DIR, "town01", "people_cfg.yml"
-    )  # if None, no people are added
+    people_config_file: str | None = os.path.join(DATA_DIR, "town01", "people_cfg.yml")  # if None, no people are added
     # multiply vehicles
-    vehicle_config_file: Optional[str] = os.path.join(
+    vehicle_config_file: str | None = os.path.join(
         DATA_DIR, "town01", "vehicle_cfg.yml"
     )  # if None, no vehicles are added
 

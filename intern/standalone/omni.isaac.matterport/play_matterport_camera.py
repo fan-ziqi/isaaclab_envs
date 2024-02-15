@@ -1,7 +1,9 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
+
 """
 This script shows how to use the camera sensor from the Orbit framework.
 

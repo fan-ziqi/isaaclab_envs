@@ -1,8 +1,10 @@
-# Copyright (c) 2023 ETH Zurich (Robotics Systems Lab)
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
 # Author: Pascal Roth
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
+
+from dataclasses import MISSING
 
 from omni.isaac.core.utils import extensions
 from omni.isaac.matterport.domains import MatterportImporter
@@ -72,7 +74,7 @@ class MatterportImporterCfg(TerrainImporterCfg):
     All sub-terrains are imported relative to this prim path.
     """
 
-    obj_filepath: str = "/home/pascal/viplanner/env/matterport/v1/scans/2n8kARJN3HM/2n8kARJN3HM/matterport_mesh/0c334eaabb844eaaad049cbbb2e0a4f2/0c334eaabb844eaaad049cbbb2e0a4f2.obj"
+    obj_filepath: str = MISSING
 
     asset_converter: AssetConverterContext = asset_converter_cfg
 

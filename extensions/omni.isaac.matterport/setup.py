@@ -1,3 +1,9 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 """Installation script for the 'omni.isaac.matterport' python package."""
 
 

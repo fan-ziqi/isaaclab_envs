@@ -1,9 +1,8 @@
-"""
-@author     Pascal Roth
-@email      rothpa@ethz.ch
-
-@brief      MatterPort3D Extension in Omniverse-Isaac Sim
-"""
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
 
 import asyncio
 import gc
@@ -22,7 +21,6 @@ import omni.isaac.core.utils.stage as stage_utils
 
 # isaac-core
 import omni.ui as ui
-import torch
 from omni.isaac.matterport.domains import MatterportImporter
 from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
 from omni.isaac.orbit.sim import SimulationCfg, SimulationContext
