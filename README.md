@@ -1,6 +1,6 @@
 <div style="display: flex;">
-    <img src="docs/example_matterport.jpg" alt="Matterport Mesh" style="flex: 50%; padding: 5px;">
-    <img src="docs/example_carla.jpg" alt="Unreal Engine / Carla Mesh" style="flex: 50%; padding: 5px;">
+    <img src="docs/example_matterport.png" alt="Matterport Mesh" style="flex: 50%; padding: 5px;">
+    <img src="docs/example_carla.png" alt="Unreal Engine / Carla Mesh" style="flex: 50%; padding: 5px;">
 </div>
 
 ---
