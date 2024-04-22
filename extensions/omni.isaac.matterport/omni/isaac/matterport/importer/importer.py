@@ -24,7 +24,7 @@ import omni.isaac.orbit.sim as sim_utils
 from omni.isaac.orbit.terrains import TerrainImporter
 
 if TYPE_CHECKING:
-    from omni.isaac.matterport.config import MatterportImporterCfg
+    from .importer_cfg import MatterportImporterCfg
 
 # omniverse
 from omni.isaac.core.utils import extensions

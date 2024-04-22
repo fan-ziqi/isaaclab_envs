@@ -23,7 +23,7 @@ import omni.isaac.core.utils.stage as stage_utils
 # isaac-core
 import omni.ui as ui
 import torch
-from omni.isaac.matterport.domains import MatterportImporter
+from omni.isaac.matterport.importer import MatterportImporter
 from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
 from omni.isaac.orbit.sim import SimulationCfg, SimulationContext
 

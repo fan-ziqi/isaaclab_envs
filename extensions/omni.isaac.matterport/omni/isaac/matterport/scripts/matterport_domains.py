@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import omni
 import torch
-from omni.isaac.matterport.domains.matterport_raycast_camera import (
+from omni.isaac.matterport.domains.matterport_raycaster_camera import (
     MatterportRayCasterCamera,
 )
 from omni.isaac.orbit.sensors.camera import CameraData

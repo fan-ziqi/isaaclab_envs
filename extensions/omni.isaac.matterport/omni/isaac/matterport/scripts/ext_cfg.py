@@ -8,7 +8,7 @@
 # python
 from dataclasses import dataclass
 
-from omni.isaac.matterport.config.importer_cfg import MatterportImporterCfg
+from omni.isaac.matterport.importer import MatterportImporterCfg
 
 
 @dataclass

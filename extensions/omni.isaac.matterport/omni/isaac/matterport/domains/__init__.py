@@ -2,17 +2,15 @@ import os
 
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../data"))
 
-from .matterport_importer import MatterportImporter
-from .matterport_raycast_camera import MatterportRayCasterCamera
+from .matterport_raycaster_camera import MatterportRayCasterCamera
+from .matterport_raycaster_camera_cfg import MatterportRayCasterCameraCfg
 from .matterport_raycaster import MatterportRayCaster
-from .raycaster_cfg import MatterportRayCasterCfg
+from .matterport_raycaster_cfg import MatterportRayCasterCfg
 
 __all__ = [
     "MatterportRayCasterCamera",
-    "MatterportImporter",
+    "MatterportRayCasterCameraCfg",
     "MatterportRayCaster",
     "MatterportRayCasterCfg",
     "DATA_DIR",
 ]
-
-# EoF
