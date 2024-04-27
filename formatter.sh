@@ -1,5 +1,7 @@
+#!/bin/bash
+
 # get source directory
-export VIPLANNER_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+export ORBIT_ENVS_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 
 # run the formatter over the repository
@@ -10,6 +12,6 @@ if ! command -v pre-commit &>/dev/null; then
 fi
 # always execute inside the Orbit directory
 echo "[INFO] Formatting the repository..."
-cd ${VIPLANNER_PATH}
+cd ${ORBIT_ENVS_PATH}
 pre-commit run --all-files
 cd - > /dev/null

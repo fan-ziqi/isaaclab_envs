@@ -1,9 +1,8 @@
-"""
-@author     Pascal Roth
-@email      rothpa@student.ethz.ch
-
-@brief      Load Carla Scene and add semantic labels
-"""
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
 
 # python
 import os
@@ -172,7 +171,7 @@ class CarlaLoader:
         # assign class to mesh in ISAAC
         def recursive_semUpdate(prim, sem_class_name: str, update_submesh: bool) -> bool:
             # Necessary for Park Mesh
-            # FIXME: inclue all meshes leads to OgnSdStageInstanceMapping does not support more than 65535 semantic entities (2718824 requested) error since entities are restricted to int16
+            # FIXME: include all meshes leads to OgnSdStageInstanceMapping does not support more than 65535 semantic entities (2718824 requested) error since entities are restricted to int16
             if (
                 prim.GetName() == "HierarchicalInstancedStaticMesh"
             ):  # or "FoliageInstancedStaticMeshComponent" in prim.GetName():
@@ -330,7 +329,7 @@ class CarlaLoader:
             self.insert_single_person(
                 person_cfg["prim_name"],
                 person_cfg["translation"],
-                scale_people=1,  #  scale_people,
+                scale_people=1,  # scale_people,
                 usd_path=person_cfg.get("usd_path", "People/Characters/F_Business_02/F_Business_02.usd"),
             )
             # TODO: movement of the people

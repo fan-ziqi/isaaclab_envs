@@ -1,11 +1,16 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, ClassVar, Sequence
+from typing import ClassVar, Sequence
 
 import carb
 import numpy as np
-from tensordict import TensorDict
 import omni.isaac.orbit.utils.math as math_utils
 import pandas as pd
 import torch
@@ -14,6 +19,7 @@ import warp as wp
 from omni.isaac.matterport.domains import DATA_DIR
 from omni.isaac.orbit.sensors import RayCasterCamera, RayCasterCameraCfg
 from omni.isaac.orbit.utils.warp import raycast_mesh
+from tensordict import TensorDict
 
 
 class MatterportRayCasterCamera(RayCasterCamera):
