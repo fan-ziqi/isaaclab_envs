@@ -4,15 +4,15 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 from __future__ import annotations
-from dataclasses import MISSING
 
 from dataclasses import MISSING
+from typing_extensions import Literal
 
 from omni.isaac.core.utils import extensions
-from omni.isaac.matterport.importer import MatterportImporter
 from omni.isaac.orbit.terrains import TerrainImporterCfg
 from omni.isaac.orbit.utils import configclass
-from typing_extensions import Literal
+
+from .importer import MatterportImporter
 
 extensions.enable_extension("omni.kit.asset_converter")
 from omni.kit.asset_converter.impl import AssetConverterContext

@@ -13,8 +13,8 @@ from setuptools import setup
 INSTALL_REQUIRES = [
     # generic
     "trimesh",
-    "PyQt5",
-    "matplotlib>=3.5.0",
+    # "PyQt5",
+    # "matplotlib>=3.5.0",
     "pandas",
 ]
 
@@ -33,5 +33,3 @@ setup(
     classifiers=["Natural Language :: English", "Programming Language :: Python :: 3.7"],
     zip_safe=False,
 )
-
-# EOF

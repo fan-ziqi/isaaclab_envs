@@ -1,4 +1,8 @@
-from .random_exploration import RandomExploration
-from .random_exploration_cfg import RandomExplorationCfg
+from .trajectory_sampling import TrajectorySampling
+from .trajectory_sampling_cfg import TrajectorySamplingCfg
+from .viewpoint_sampling import ViewpointSampling
+from .viewpoint_sampling_cfg import ViewpointSamplingCfg
+from .exploration_cfg import ExplorationCfg
+from .terrain_analysis import TerrainAnalysis, TerrainAnalysisCfg
 
-__all__ = ["RandomExploration", "RandomExplorationCfg"]
+__all__ = ["TrajectorySampling", "TrajectorySamplingCfg", "ViewpointSampling", "ViewpointSamplingCfg", "ExplorationCfg", "TerrainAnalysis", "TerrainAnalysisCfg"]

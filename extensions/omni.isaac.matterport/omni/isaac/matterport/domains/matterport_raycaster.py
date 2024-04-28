@@ -49,6 +49,8 @@ class MatterportRayCaster(RayCaster):
 
     def _initialize_warp_meshes(self):
         # check if mesh is already loaded
+        assert len(self.cfg.mesh_prim_paths) == 1, "Currently only one Matterport Environment is supported."
+
         for mesh_prim_path in self.cfg.mesh_prim_paths:
             if mesh_prim_path in MatterportRayCaster.meshes:
                 continue

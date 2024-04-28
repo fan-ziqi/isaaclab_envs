@@ -8,19 +8,22 @@ from __future__ import annotations
 
 import builtins
 
-# python
 import os
 from typing import TYPE_CHECKING
+import numpy as np
+import torch
+import trimesh
 
-# omni
+import warp
+from pxr import UsdGeom
+
 import carb
 import omni.isaac.core.utils.prims as prim_utils
 import omni.isaac.core.utils.stage as stage_utils
 
-# isaac-orbit
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.core.simulation_context import SimulationContext
 from omni.isaac.orbit.terrains import TerrainImporter
+from omni.isaac.orbit.utils.warp import convert_to_warp_mesh
 
 if TYPE_CHECKING:
     from .importer_cfg import MatterportImporterCfg
@@ -74,7 +77,7 @@ class MatterportImporter(TerrainImporter):
         """
         # store inputs
         self.cfg = cfg
-        self.device = SimulationContext.instance().device
+        self.device = sim_utils.SimulationContext.instance().device
 
         # create a dict of meshes
         self.meshes = dict()
@@ -102,7 +105,6 @@ class MatterportImporter(TerrainImporter):
 
         # Converter
         self.converter: MatterportConverter = MatterportConverter(self.cfg.obj_filepath, self.cfg.asset_converter)
-        return
 
     async def load_world_async(self) -> None:
         """Function called when clicking load button"""
@@ -112,7 +114,6 @@ class MatterportImporter(TerrainImporter):
         await stage_utils.update_stage_async()
         # Now we are ready!
         carb.log_info("[INFO]: Setup complete...")
-        return
 
     def load_world(self) -> None:
         """Function called when clicking load button"""
@@ -122,7 +123,6 @@ class MatterportImporter(TerrainImporter):
         stage_utils.update_stage()
         # Now we are ready!
         carb.log_info("[INFO]: Setup complete...")
-        return
 
     async def load_matterport(self) -> None:
         _, ext = os.path.splitext(self.cfg.obj_filepath)
@@ -153,9 +153,26 @@ class MatterportImporter(TerrainImporter):
         physics_material_cfg.func(f"{self.cfg.prim_path}/physicsMaterial", self.cfg.physics_material)
         sim_utils.bind_physics_material(self._xform_prim.GetPrimPath(), f"{self.cfg.prim_path}/physicsMaterial")
 
+        # traverse the prim and get the collision mesh
+        # THINK: Should the user specify the collision mesh?
+        mesh_prim = sim_utils.get_first_matching_child_prim(
+            self.cfg.prim_path + "/Matterport", lambda prim: prim.GetTypeName() == "Mesh"
+        )
+        # check if the mesh is valid
+        if mesh_prim is None:
+            raise ValueError(f"Could not find any collision mesh in {self.cfg.obj_filepath}. Please check asset.")
+        # cast into UsdGeomMesh
+        mesh_prim = UsdGeom.Mesh(mesh_prim)
+        # store the mesh
+        vertices = np.asarray(mesh_prim.GetPointsAttr().Get())
+        faces = np.asarray(mesh_prim.GetFaceVertexIndicesAttr().Get()).reshape(-1, 3)
+        self.meshes["matterport"] = trimesh.Trimesh(vertices=vertices, faces=faces)
+        # create a warp mesh
+        device = "cuda" if "cuda" in self.device else "cpu"
+        self.warp_meshes["matterport"] = convert_to_warp_mesh(vertices, faces, device=device)
+
         # add colliders and physics material
         if self.cfg.groundplane:
             ground_plane_cfg = sim_utils.GroundPlaneCfg(physics_material=self.cfg.physics_material)
             ground_plane = ground_plane_cfg.func("/World/GroundPlane", ground_plane_cfg)
             ground_plane.visible = False
-        return

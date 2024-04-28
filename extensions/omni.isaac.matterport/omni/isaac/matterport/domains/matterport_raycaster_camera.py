@@ -21,7 +21,6 @@ from omni.isaac.orbit.sensors import RayCasterCamera, RayCasterCameraCfg
 from omni.isaac.orbit.utils.warp import raycast_mesh
 from tensordict import TensorDict
 
-
 class MatterportRayCasterCamera(RayCasterCamera):
     UNSUPPORTED_TYPES: ClassVar[dict] = {
         "rgb",
@@ -74,6 +73,9 @@ class MatterportRayCasterCamera(RayCasterCamera):
         )
 
     def _initialize_warp_meshes(self):
+        # only one mesh is supported
+        assert len(self.cfg.mesh_prim_paths) == 1, "Currently only one Matterport Environment is supported."
+
         # check if mesh is already loaded
         for mesh_prim_path in self.cfg.mesh_prim_paths:
             if (
@@ -201,3 +203,73 @@ class MatterportRayCasterCamera(RayCasterCamera):
                 raise ValueError(f"Unknown data type: {name}")
             # store the data
             self._data.output[name] = torch.zeros((self._view.count, *shape), dtype=dtype, device=self._device)
+
+    """
+    Debug Visualization
+    """
+
+    # def _debug_vis_callback(self, event):
+    #     """Callback for the debug visualization event."""
+    #     super()._debug_vis_callback(event)
+        
+    #     if not hasattr(self, "image_visualizer") or not SimulationContext.instance().is_playing():
+    #         # Visualizers have not been created yet.
+    #         return
+    #     # update the visualization
+    #     self.image_visualizer.update_image(self._data.output["semantic_segmentation"].view(-1, 3).cpu().numpy())
+
+    # def _set_debug_vis_impl(self, debug_vis: bool):
+    #     """Set the debug visualization implementation.
+
+    #     Args:
+    #         debug_vis: Whether to enable or disable debug visualization.
+    #     """
+    #     super()._set_debug_vis_impl(debug_vis)
+
+    #     if not hasattr(self, "_viewer_env_idx"):
+    #         self._viewer_env_idx = 0
+
+    #     if not hasattr(self, "_vis_frame"):
+    #         raise RuntimeError("No frame set for debug visualization.")
+
+    #     # Clear internal visualizers
+    #     self._action_term_visualizers = []
+    #     self._vis_frame.clear()
+
+    #     if debug_vis:
+    #         # create a subscriber for the post update event if it doesn't exist
+    #         if not hasattr(self, "_debug_vis_handle") or self._debug_vis_handle is None:
+    #             app_interface = omni.kit.app.get_app_interface()
+    #             self._debug_vis_handle = app_interface.get_post_update_event_stream().create_subscription_to_pop(
+    #                 lambda event, obj=weakref.proxy(self): obj._debug_vis_callback(event)
+    #             )
+    #     else:
+    #         # remove the subscriber if it exists
+    #         if self._debug_vis_handle is not None:
+    #             self._debug_vis_handle.unsubscribe()
+    #             self._debug_vis_handle = None
+
+    #         self._vis_frame.visible = False
+    #         return
+
+    #     self._vis_frame.visible = True
+
+    #     with self._vis_frame:
+    #         with VStack():
+    #             # Add a plot in a collapsible frame for each action term
+    #             for name, terms in self.get_active_iterable_terms():
+    #                 frame = CollapsableFrame(
+    #                     name,
+    #                     collapsed=False,
+    #                     style={"border_color": 0xFF8A8777, "padding": 4},
+    #                 )
+    #                 with frame:
+    #                     plot = LiveLinePlot(
+    #                         y_data=[[term] for term in terms],
+    #                         plot_height=150,
+    #                         show_legend=True,
+    #                     )
+    #                     self._action_term_visualizers.append(plot)
+    #                 frame.collapsed = True
+
+    #     self._debug_vis = debug_vis
