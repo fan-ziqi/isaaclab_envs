@@ -7,13 +7,23 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING
-
+from collections.abc import Sequence
+from typing import ClassVar, TYPE_CHECKING
 import numpy as np
 import trimesh
+import torch
+import pandas as pd
+
+import omni.physics.tensors.impl.api as physx
+from omni.isaac.core.prims import XFormPrimView
 import warp as wp
-from omni.isaac.matterport.domains import DATA_DIR
+
 from omni.isaac.orbit.sensors.ray_caster import RayCaster
+from omni.isaac.orbit.utils.math import convert_quat, quat_apply, quat_apply_yaw
+from omni.isaac.orbit.utils.warp import raycast_mesh
+
+from omni.isaac.matterport.domains import DATA_DIR
+from .matterport_raycaster_data import MatterportRayCasterData
 
 if TYPE_CHECKING:
     from .raycaster_cfg import MatterportRayCasterCfg
@@ -38,6 +48,9 @@ class MatterportRayCaster(RayCaster):
     cfg: MatterportRayCasterCfg
     """The configuration parameters."""
 
+    face_id_category_mapping: ClassVar[dict] = {}
+    """Mapping from face id to semantic category id."""
+
     def __init__(self, cfg: MatterportRayCasterCfg):
         """Initializes the ray-caster object.
 
@@ -47,12 +60,23 @@ class MatterportRayCaster(RayCaster):
         # initialize base class
         super().__init__(cfg)
 
+        self._data = MatterportRayCasterData()
+
+    def _initialize_impl(self):
+        super()._initialize_impl()
+
+        # load categort id to class mapping (name and id of mpcat40 redcued class set)
+        # More Information: https://github.com/niessner/Matterport/blob/master/data_organization.md#house_segmentations
+        mapping = pd.read_csv(DATA_DIR + "/mappings/category_mapping.tsv", sep="\t")
+        self.mapping_mpcat40 = torch.tensor(mapping["mpcat40index"].to_numpy(), device=self._device, dtype=torch.long)
+        self.classes_mpcat40 = pd.read_csv(DATA_DIR + "/mappings/mpcat40.tsv", sep="\t")["mpcat40"].to_numpy()
+
     def _initialize_warp_meshes(self):
         # check if mesh is already loaded
         assert len(self.cfg.mesh_prim_paths) == 1, "Currently only one Matterport Environment is supported."
 
         for mesh_prim_path in self.cfg.mesh_prim_paths:
-            if mesh_prim_path in MatterportRayCaster.meshes:
+            if mesh_prim_path in MatterportRayCaster.meshes and mesh_prim_path in MatterportRayCaster.face_id_category_mapping:
                 continue
 
             # find ply
@@ -68,10 +92,72 @@ class MatterportRayCaster(RayCaster):
             # load ply
             curr_trimesh = trimesh.load(file_path)
 
-            # Convert trimesh into wp mesh
-            mesh_wp = wp.Mesh(
-                points=wp.array(curr_trimesh.vertices.astype(np.float32), dtype=wp.vec3, device=self._device),
-                indices=wp.array(curr_trimesh.faces.astype(np.int32).flatten(), dtype=int, device=self._device),
-            )
-            # save mesh
-            MatterportRayCaster.meshes[mesh_prim_path] = mesh_wp
+            if mesh_prim_path not in MatterportRayCaster.meshes:
+                # Convert trimesh into wp mesh
+                mesh_wp = wp.Mesh(
+                    points=wp.array(curr_trimesh.vertices.astype(np.float32), dtype=wp.vec3, device=self._device),
+                    indices=wp.array(curr_trimesh.faces.astype(np.int32).flatten(), dtype=int, device=self._device),
+                )
+                # save mesh
+                MatterportRayCaster.meshes[mesh_prim_path] = mesh_wp
+
+            if mesh_prim_path not in MatterportRayCaster.face_id_category_mapping:
+                # create mapping from face id to semantic categroy id
+                # get raw face information
+                faces_raw = curr_trimesh.metadata["_ply_raw"]["face"]["data"]
+                print(f"[INFO] Raw face information of type {faces_raw.dtype}")
+                # get face categories
+                face_id_category_mapping = torch.tensor(
+                    [single_face[3] for single_face in faces_raw], device=self._device
+                )
+                # save mapping
+                MatterportRayCaster.face_id_category_mapping[mesh_prim_path] = face_id_category_mapping
+
+    def _update_buffers_impl(self, env_ids: Sequence[int]):
+        """Fills the buffers of the sensor data."""
+        # obtain the poses of the sensors
+        if isinstance(self._view, XFormPrimView):
+            pos_w, quat_w = self._view.get_world_poses(env_ids)
+        elif isinstance(self._view, physx.ArticulationView):
+            pos_w, quat_w = self._view.get_root_transforms()[env_ids].split([3, 4], dim=-1)
+            quat_w = convert_quat(quat_w, to="wxyz")
+        elif isinstance(self._view, physx.RigidBodyView):
+            pos_w, quat_w = self._view.get_transforms()[env_ids].split([3, 4], dim=-1)
+            quat_w = convert_quat(quat_w, to="wxyz")
+        else:
+            raise RuntimeError(f"Unsupported view type: {type(self._view)}")
+        # note: we clone here because we are read-only operations
+        pos_w = pos_w.clone()
+        quat_w = quat_w.clone()
+        # apply drift
+        pos_w += self.drift[env_ids]
+        # store the poses
+        self._data.pos_w[env_ids] = pos_w
+        self._data.quat_w[env_ids] = quat_w
+
+        # ray cast based on the sensor poses
+        if self.cfg.attach_yaw_only:
+            # only yaw orientation is considered and directions are not rotated
+            ray_starts_w = quat_apply_yaw(quat_w.repeat(1, self.num_rays), self.ray_starts[env_ids])
+            ray_starts_w += pos_w.unsqueeze(1)
+            ray_directions_w = self.ray_directions[env_ids]
+        else:
+            # full orientation is considered
+            ray_starts_w = quat_apply(quat_w.repeat(1, self.num_rays), self.ray_starts[env_ids])
+            ray_starts_w += pos_w.unsqueeze(1)
+            ray_directions_w = quat_apply(quat_w.repeat(1, self.num_rays), self.ray_directions[env_ids])
+        # ray cast and store the hits
+        # TODO: Make this work for multiple meshes?
+        self._data.ray_hits_w[env_ids], _, _, ray_face_ids = raycast_mesh(
+            ray_starts_w,
+            ray_directions_w,
+            max_dist=self.cfg.max_distance,
+            mesh=RayCaster.meshes[self.cfg.mesh_prim_paths[0]],
+            return_face_id=True,
+        )
+        # assign each hit the semantic class
+        face_id = MatterportRayCaster.face_id_category_mapping[self.cfg.mesh_prim_paths[0]][
+            ray_face_ids.flatten().type(torch.long)
+        ]
+        # map category index to reduced set
+        self._data.ray_class_ids[env_ids] = self.mapping_mpcat40[face_id.type(torch.long) - 1].reshape(len(env_ids), -1)     

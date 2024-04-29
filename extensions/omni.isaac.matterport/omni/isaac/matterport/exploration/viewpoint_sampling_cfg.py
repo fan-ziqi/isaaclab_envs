@@ -41,11 +41,10 @@ class ViewpointSamplingCfg(ExplorationCfg):
     """Rate of faces that are covered by three different images, used to terminate the exploration"""
 
     # SAVING
-    max_images: int = 2000
-    """Maximum number of images recorded"""
-    save_path: str = "/home/pascal/viplanner/imperative_learning/data/temp"
-    suffix: str | None = "cam_mount"
-    """Path to save the data to (directy with env name will be created)"""
+    save_path: str | None = "/home/pascal/viplanner/imperative_learning/data/temp"
+    """Directory to save the viewpoint samples, camera intrinsics and rendered images to. 
+    
+    If None, the directory is the same as the one of the obj file. Default is None."""
 
     # debug
     debug_viz: bool = True

@@ -16,8 +16,8 @@ from omni.isaac.orbit.app import AppLauncher
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="This script demonstrates how to use the camera sensor.")
-parser.add_argument("--headless", action="store_true", default=True, help="Force display off at all times.")
-parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to spawn.")
+parser.add_argument("--headless", action="store_true", default=False, help="Force display off at all times.")
+parser.add_argument("--num_envs", type=int, default=5, help="Number of environments to spawn.")
 args_cli = parser.parse_args()
 
 # launch omniverse app
@@ -42,6 +42,7 @@ def main():
     sim = SimulationContext(sim_cfg)
 
     cfg = ViewpointSamplingCfg()
+    cfg.exploration_scene.num_envs = args_cli.num_envs  # set number of environments
     explorer = ViewpointSampling(cfg)
     # Now we are ready!
     print("[INFO]: Setup complete...")
@@ -49,13 +50,14 @@ def main():
     # sample and render viewpoints
     samples = explorer.sample_viewpoints(1879)
     explorer.render_viewpoints(samples)
+    print("[INFO]: Viewpoints sampled and rendered will continue to render the environment and visualize the last camera positions...")
     
     # Define simulation stepping
     sim_dt = sim.get_physics_dt()
     # Simulation loop
     while simulation_app.is_running():
         # Perform step
-        sim.step()
+        sim.render()
         # Update buffers
         explorer.scene.update(sim_dt)
 

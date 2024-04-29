@@ -22,6 +22,7 @@ from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils.warp import raycast_mesh
 
 from omni.isaac.matterport.domains import MatterportRayCaster, MatterportRayCasterCamera
+from .matterport_class_cost import MatterportSemanticCostMapping
 
 @configclass
 class TerrainAnalysisCfg:
@@ -47,6 +48,11 @@ class TerrainAnalysisCfg:
     """Threshold for height difference between two points"""
     viz_graph: bool = True
     """Visualize the graph after the construction for a short amount of time."""
+
+    semantic_cost_mapping: object | None = MatterportSemanticCostMapping()
+    """Mapping of semantic categories to costs for filtering edges and nodes"""
+    semantic_cost_threshold: float = 0.5
+    """Threshold for semantic cost filtering"""
 
 
 class TerrainAnalysis:
@@ -101,6 +107,10 @@ class TerrainAnalysis:
             # filter points that are too close to walls
             ray_origins, heights = self._point_filter_wall_closeness(ray_origins, heights, z_depth)
 
+            # filter points based on semantic cost
+            if self.cfg.semantic_cost_mapping is not None:
+                ray_origins = self._point_filter_semantic_cost(ray_origins, heights)
+
             sampled_points.append(torch.clone(ray_origins))
             sampled_nb_points += ray_origins.shape[0]
 
@@ -121,6 +131,10 @@ class TerrainAnalysis:
         idx_edge_start, idx_edge_end, distance, idx_edge_start_filtered, idx_edge_end_filtered = (
             self._edge_filter_height_diff(idx_edge_start, idx_edge_end, distance)
         )
+
+        # filter edges based on semantic cost
+        if self.cfg.semantic_cost_mapping is not None:
+            idx_edge_start, idx_edge_end, distance, idx_edge_start_filtered_sem, idx_edge_end_filtered_sem = self._edge_filter_semantic_cost(idx_edge_start, idx_edge_end, distance)
 
         # init graph
         print(f"[INFO] Constructing graph with {idx_edge_start.shape[0]} edges")
@@ -154,6 +168,9 @@ class TerrainAnalysis:
 
         # debug visualization
         if self.cfg.viz_graph:
+            env_render_steps = 1000
+            print(f"[INFO] Visualizing graph. Will do {env_render_steps} render steps...")
+            
             # in headless mode, we cannot visualize the graph and omni.debug.draw is not available
             try:
                 import omni.isaac.debug_draw._debug_draw as omni_debug_draw
@@ -178,14 +195,24 @@ class TerrainAnalysis:
                         [(1, 0, 0, 1)],
                         [1],
                     )
+                if self.cfg.semantic_cost_mapping is not None:
+                    for start_idx, goal_idx in zip(idx_edge_start_filtered_sem, idx_edge_end_filtered_sem):
+                        draw_interface.draw_lines(
+                            [self.points[start_idx].tolist()],
+                            [self.points[goal_idx].tolist()],
+                            [(1, 0, 0, 1)],
+                            [1],
+                        )
                 
                 sim = SimulationContext.instance()
-                for _ in range(3000):
+                for _ in range(env_render_steps):
                     sim.render()
 
                 # clear the drawn points and lines
                 draw_interface.clear_points()
                 draw_interface.clear_lines()
+
+                print("[INFO] Finished visualizing graph.")
 
             except ImportError:
                 print("[WARNING] Graph Visualization is not available in headless mode.")
@@ -264,9 +291,44 @@ class TerrainAnalysis:
         heights = heights[without_wall]
         return ray_origins, heights
 
-    def _point_filter_semantic_cost():
-        pass 
-        # TODO: implement semantic cost filtering
+    def _point_filter_semantic_cost(self, ray_origins: torch.Tensor, heights: torch.Tensor):
+        # raycast vertically down and get the corresponding face id
+        ray_directions = torch.zeros((ray_origins.shape[0], 3), dtype=torch.float32)
+        ray_directions[:, 2] = -1.0
+
+        ray_face_ids = raycast_mesh(
+            ray_starts=ray_origins.unsqueeze(0),
+            ray_directions=ray_directions.unsqueeze(0),
+            mesh=self._raycaster.meshes[self._raycaster.cfg.mesh_prim_paths[0]],
+            max_dist=self.cfg.wall_height * 2,
+            return_face_id=True,
+        )[3]
+
+        if isinstance(self._raycaster, MatterportRayCaster | MatterportRayCasterCamera):
+            # assign each hit the semantic class
+            class_id = self._raycaster.face_id_category_mapping[self._raycaster.cfg.mesh_prim_paths[0]][
+                ray_face_ids.flatten().type(torch.long)
+            ]
+            # map category index to reduced set
+            class_id = self._raycaster.mapping_mpcat40[class_id.type(torch.long) - 1]
+
+            # get class_id to cost mapping
+            assert self.cfg.semantic_cost_mapping is not None, "Semantic cost mapping is not available"
+            class_id_to_cost = torch.ones(len(self._raycaster.classes_mpcat40)) * max(list(self.cfg.semantic_cost_mapping.to_dict().values()))
+            for class_name, class_cost in self.cfg.semantic_cost_mapping.to_dict().items():
+                class_id_to_cost[self._raycaster.classes_mpcat40 == class_name] = class_cost
+            
+        else:
+            # TODO: Implement for unreal engine meshes
+            raise NotImplementedError("Semantic cost filtering is only available for MatterportRayCaster sensors")
+        
+        # get cost 
+        cost = class_id_to_cost[class_id.cpu()]
+
+        # filter points based on cost
+        filter_cost = cost < self.cfg.semantic_cost_threshold
+        print(f"[INFO] filtered {ray_origins.shape[0] - filter_cost.sum().item()} points based on semantic cost")
+        return ray_origins[filter_cost].type(torch.float32)
 
     ###
     # Edge filtering functions
@@ -377,3 +439,82 @@ class TerrainAnalysis:
         distance = min_distance[~collision.reshape(-1)].cpu().numpy()
 
         return idx_edge_start, idx_edge_end, distance
+
+    def _edge_filter_semantic_cost(
+        self, idx_edge_start: np.ndarray, idx_edge_end: np.ndarray, distance: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Filter edges based on height difference between points."""
+        # get dimensions and construct height grid with raycasting
+        x_max, y_max, x_min, y_min = self._get_mesh_dimensions()
+        grid_x, grid_y = torch.meshgrid(
+            torch.linspace(x_min, x_max, int((x_max - x_min) / self.cfg.grid_resolution)),
+            torch.linspace(y_min, y_max, int((y_max - y_min) / self.cfg.grid_resolution)),
+        )
+        grid_z = torch.ones_like(grid_x) * max(list(self.cfg.semantic_cost_mapping.to_dict().values()))
+        grid_points = torch.vstack((grid_x.flatten(), grid_y.flatten(), grid_z.flatten())).T
+        direction = torch.zeros_like(grid_points)
+        direction[:, 2] = -1.0
+
+        # check for collision with raycasting
+        ray_face_ids = raycast_mesh(
+            ray_starts=grid_points.unsqueeze(0),
+            ray_directions=direction.unsqueeze(0),
+            mesh=self._raycaster.meshes[self._raycaster.cfg.mesh_prim_paths[0]],
+            max_dist=self.cfg.wall_height * 2,
+            return_face_id=True,
+        )[3].squeeze(0)
+
+        if isinstance(self._raycaster, MatterportRayCaster | MatterportRayCasterCamera):
+            # assign each hit the semantic class
+            class_id = self._raycaster.face_id_category_mapping[self._raycaster.cfg.mesh_prim_paths[0]][
+                ray_face_ids.flatten().type(torch.long)
+            ]
+            # map category index to reduced set
+            class_id = self._raycaster.mapping_mpcat40[class_id.type(torch.long) - 1]
+
+            # get class_id to cost mapping
+            assert self.cfg.semantic_cost_mapping is not None, "Semantic cost mapping is not available"
+            class_id_to_cost = torch.ones(len(self._raycaster.classes_mpcat40)) * max(list(self.cfg.semantic_cost_mapping.to_dict().values()))
+            for class_name, class_cost in self.cfg.semantic_cost_mapping.to_dict().items():
+                class_id_to_cost[self._raycaster.classes_mpcat40 == class_name] = class_cost
+
+        else:
+            # TODO: Implement for unreal engine meshes
+            raise NotImplementedError("Semantic cost filtering is only available for MatterportRayCaster sensors")
+
+        # get cost grid
+        cost = class_id_to_cost[class_id.cpu()]
+        cost_grid = cost.reshape(
+            int((x_max - x_min) / self.cfg.grid_resolution), int((y_max - y_min) / self.cfg.grid_resolution)
+        ).cpu().numpy()
+        
+        # get grid indexes of edges
+        check_grid_idx_start = (
+            ((self.points[idx_edge_start, :2] - torch.tensor([x_min, y_min])) / self.cfg.grid_resolution)
+            .int()
+            .cpu()
+            .numpy()
+        )
+        check_grid_idx_end = (
+            ((self.points[idx_edge_end, :2] - torch.tensor([x_min, y_min])) / self.cfg.grid_resolution)
+            .int()
+            .cpu()
+            .numpy()
+        )
+
+        filter_idx = np.zeros(check_grid_idx_start.shape[0], dtype=bool)
+
+        for idx, (edge_start_idx, edge_end_idx) in enumerate(zip(check_grid_idx_start, check_grid_idx_end)):
+            grid_idx_x, grid_idx_y = line(edge_start_idx[0], edge_start_idx[1], edge_end_idx[0], edge_end_idx[1])
+
+            filter_idx[idx] = np.any(cost_grid[grid_idx_x, grid_idx_y] > self.cfg.semantic_cost_threshold)
+
+        # filter edges
+        idx_edge_start_filtered = idx_edge_start[filter_idx]
+        idx_edge_end_filtered = idx_edge_end[filter_idx]
+
+        idx_edge_start = idx_edge_start[~filter_idx]
+        idx_edge_end = idx_edge_end[~filter_idx]
+        distance = distance[~filter_idx]
+
+        return idx_edge_start, idx_edge_end, distance, idx_edge_start_filtered, idx_edge_end_filtered

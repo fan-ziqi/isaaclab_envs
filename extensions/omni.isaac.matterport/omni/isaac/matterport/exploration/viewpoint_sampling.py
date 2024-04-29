@@ -46,8 +46,9 @@ class ViewpointSampling:
         # [x, y, z, qx, qv, qz, qw]
 
         # load viewpoint samples if the exists
-        filename = f"viewoints_seed{seed}_samples{num_samples}.pkl"
-        filename = os.path.join(self._get_save_filedir(), filename)
+        filename = f"viewoints_seed{seed}_samples{nbr_viewpoints}.pkl"
+        filedir = self.cfg.save_path if self.cfg.save_path else self._get_save_filedir()
+        filename = os.path.join(filedir, filename)
         if os.path.isfile(filename):
             with open(filename, "rb") as f:
                 data = pickle.load(f)
@@ -97,20 +98,21 @@ class ViewpointSampling:
 
         # debug points and orientation
         if self.cfg.debug_viz:
-            print(f"[INFO] Visualizing {sample_locations_count} samples.")
+            env_render_steps = 1000
+            print(f"[INFO] Visualizing {sample_locations_count} samples for {env_render_steps} render steps...")
             marker_cfg = GREEN_ARROW_X_MARKER_CFG.copy()
             marker_cfg.prim_path = "/Visuals/viewpoints"
             marker_cfg.markers["arrow"].scale = (0.1, 0.1, 0.1)
             self.visualizer = VisualizationMarkers(marker_cfg)
             self.visualizer.visualize(samples[:, :3], samples[:, 3:])
 
-            for i in range(2000):
+            for i in range(env_render_steps):
                 self.sim.render()
             
             self.visualizer.set_visibility(False)
+            print("[INFO] Done visualizing.")
 
         return samples
-
 
     def render_viewpoints(self, samples: torch.Tensor):
         """Render the images at the given viewpoints and save them to the drive."""
@@ -124,18 +126,18 @@ class ViewpointSampling:
         image_idx = 0
 
         # save poses
-        save_path= self._get_save_filedir()
+        filedir = self.cfg.save_path if self.cfg.save_path else self._get_save_filedir()
         # create directories
         for cam, annotator in self.cfg.cameras.items():
-            os.makedirs(os.path.join(save_path, cam, annotator), exist_ok=True)
+            os.makedirs(os.path.join(filedir, cam, annotator), exist_ok=True)
 
         # save camera configurations
-        print(f"[INFO] Saving camera configurations to {save_path}.")
+        print(f"[INFO] Saving camera configurations to {filedir}.")
         for cam in self.cfg.cameras.keys():
-            np.savetxt(os.path.join(save_path, cam, "intrinsics.txt"), self.scene.sensors[cam].data.intrinsic_matrices[0].cpu().numpy(), delimiter=",")
+            np.savetxt(os.path.join(filedir, cam, "intrinsics.txt"), self.scene.sensors[cam].data.intrinsic_matrices[0].cpu().numpy(), delimiter=",")
 
         # save camera poses
-        np.savetxt(os.path.join(save_path, "camera_poses.txt"), samples.cpu().numpy(), delimiter=",")  
+        np.savetxt(os.path.join(filedir, "camera_poses.txt"), samples.cpu().numpy(), delimiter=",")  
 
         # save images
         samples = samples.to(self.scene.device)
@@ -152,29 +154,28 @@ class ViewpointSampling:
                 )
             # update simulation
             self.scene.write_data_to_sim()
-            # make some render steps (ensure that buffers are filled correctly)
-            for _ in range(10):
-                self.sim.render()
+            self.scene.update(self.sim.get_physics_dt())
             # render
             start_time = time.time()
             for cam, annotator in self.cfg.cameras.items():
                 image_data_np = self.scene.sensors[cam].data.output[annotator].cpu().numpy()                
-                # move channel
-                if image_data_np.shape[-1] == 3:
-                    image_data_np = np.moveaxis(image_data_np, -1, 1)
-                
+                # filter nan
+                image_data_np[np.isnan(image_data_np)] = 0
+                # filter inf
+                image_data_np[np.isinf(image_data_np)] = 0
+
                 # save images
                 for idx in range(samples_idx.shape[0]):
                     # semantic segmentation
-                    if image_data_np.shape[1] == 3:
+                    if image_data_np.shape[-1] == 3:
                         assert cv2.imwrite(
-                            os.path.join(save_path, cam, annotator, f"{image_idx}".zfill(4) + ".png"),
+                            os.path.join(filedir, cam, annotator, f"{image_idx}".zfill(4) + ".png"),
                             cv2.cvtColor(image_data_np[idx].astype(np.uint8), cv2.COLOR_RGB2BGR),
                         )
                     # depth
                     else:
                         assert cv2.imwrite(
-                            os.path.join(save_path, cam, annotator, f"{image_idx}".zfill(4) + ".png"),
+                            os.path.join(filedir, cam, annotator, f"{image_idx}".zfill(4) + ".png"),
                             np.uint16(image_data_np[idx] * self.cfg.depth_scale),
                         )
                     
