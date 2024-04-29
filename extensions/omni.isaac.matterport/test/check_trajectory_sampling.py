@@ -1,3 +1,9 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
 # All rights reserved.
 #
@@ -26,9 +32,8 @@ simulation_app = app_launcher.app
 
 """Rest everything follows."""
 import omni.isaac.orbit.sim as sim_utils
+from omni.isaac.matterport.exploration import TrajectorySampling, TrajectorySamplingCfg
 from omni.isaac.orbit.sim import SimulationContext
-
-from omni.isaac.matterport.exploration import TrajectorySamplingCfg, TrajectorySampling
 
 """
 Main

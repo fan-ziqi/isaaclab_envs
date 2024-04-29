@@ -8,21 +8,20 @@ from __future__ import annotations
 
 import os
 from collections.abc import Sequence
-from typing import ClassVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
+
 import numpy as np
-import trimesh
-import torch
-import pandas as pd
-
 import omni.physics.tensors.impl.api as physx
-from omni.isaac.core.prims import XFormPrimView
+import pandas as pd
+import torch
+import trimesh
 import warp as wp
-
+from omni.isaac.core.prims import XFormPrimView
+from omni.isaac.matterport.domains import DATA_DIR
 from omni.isaac.orbit.sensors.ray_caster import RayCaster
 from omni.isaac.orbit.utils.math import convert_quat, quat_apply, quat_apply_yaw
 from omni.isaac.orbit.utils.warp import raycast_mesh
 
-from omni.isaac.matterport.domains import DATA_DIR
 from .matterport_raycaster_data import MatterportRayCasterData
 
 if TYPE_CHECKING:
@@ -76,7 +75,10 @@ class MatterportRayCaster(RayCaster):
         assert len(self.cfg.mesh_prim_paths) == 1, "Currently only one Matterport Environment is supported."
 
         for mesh_prim_path in self.cfg.mesh_prim_paths:
-            if mesh_prim_path in MatterportRayCaster.meshes and mesh_prim_path in MatterportRayCaster.face_id_category_mapping:
+            if (
+                mesh_prim_path in MatterportRayCaster.meshes
+                and mesh_prim_path in MatterportRayCaster.face_id_category_mapping
+            ):
                 continue
 
             # find ply
@@ -160,4 +162,4 @@ class MatterportRayCaster(RayCaster):
             ray_face_ids.flatten().type(torch.long)
         ]
         # map category index to reduced set
-        self._data.ray_class_ids[env_ids] = self.mapping_mpcat40[face_id.type(torch.long) - 1].reshape(len(env_ids), -1)     
+        self._data.ray_class_ids[env_ids] = self.mapping_mpcat40[face_id.type(torch.long) - 1].reshape(len(env_ids), -1)

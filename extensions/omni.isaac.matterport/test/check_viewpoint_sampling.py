@@ -1,3 +1,9 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
 # All rights reserved.
 #
@@ -26,9 +32,8 @@ simulation_app = app_launcher.app
 
 """Rest everything follows."""
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit.sim import SimulationContext
-
 from omni.isaac.matterport.exploration import ViewpointSampling, ViewpointSamplingCfg
+from omni.isaac.orbit.sim import SimulationContext
 
 """
 Main
@@ -50,8 +55,10 @@ def main():
     # sample and render viewpoints
     samples = explorer.sample_viewpoints(1879)
     explorer.render_viewpoints(samples)
-    print("[INFO]: Viewpoints sampled and rendered will continue to render the environment and visualize the last camera positions...")
-    
+    print(
+        "[INFO]: Viewpoints sampled and rendered will continue to render the environment and visualize the last camera positions..."
+    )
+
     # Define simulation stepping
     sim_dt = sim.get_physics_dt()
     # Simulation loop

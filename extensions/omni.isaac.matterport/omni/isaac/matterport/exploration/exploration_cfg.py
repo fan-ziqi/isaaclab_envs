@@ -1,15 +1,21 @@
-import torch
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 import os
 from typing import Optional, Tuple
 
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit.utils import configclass
+import torch
+from omni.isaac.matterport.domains import MatterportRayCasterCameraCfg
+from omni.isaac.matterport.importer import MatterportImporterCfg
+from omni.isaac.orbit.assets import AssetBaseCfg, RigidObjectCfg
 from omni.isaac.orbit.scene import InteractiveSceneCfg
 from omni.isaac.orbit.sensors import patterns
-from omni.isaac.orbit.assets import AssetBaseCfg, RigidObjectCfg
+from omni.isaac.orbit.utils import configclass
 
-from omni.isaac.matterport.importer import MatterportImporterCfg
-from omni.isaac.matterport.domains import MatterportRayCasterCameraCfg
 from .terrain_analysis import TerrainAnalysisCfg
 
 OBJ_PATH = "/home/pascal/orbit/orbit/source/extensions/omni.isaac.orbit_assets/data/matterport/2n8kARJN3HM/2n8kARJN3HM/matterport_mesh/0c334eaabb844eaaad049cbbb2e0a4f2/0c334eaabb844eaaad049cbbb2e0a4f2.usd"
@@ -109,12 +115,11 @@ class ExplorationSceneCfg(InteractiveSceneCfg):
 
 @configclass
 class ExplorationCfg:
-
     # scene and import definition
     sim: sim_utils.SimulationCfg = sim_utils.SimulationCfg()
     exploration_scene: InteractiveSceneCfg = ExplorationSceneCfg(num_envs=1, env_spacing=1.0)
     """Parameters to construct the matterport scene"""
-    terrain_analysis: TerrainAnalysisCfg = TerrainAnalysisCfg(raycaster_sensor = "semantic_camera")
+    terrain_analysis: TerrainAnalysisCfg = TerrainAnalysisCfg(raycaster_sensor="semantic_camera")
     """Name of the camera object in the scene definition used for the terrain analysis."""
 
     # sampling
@@ -152,4 +157,4 @@ class ExplorationCfg:
     """Maximum number of images recorded"""
     save_path: str = "/home/pascal/viplanner/imperative_learning/data"
     suffix: Optional[str] = "cam_mount"
-    """Path to save the data to (directy with env name will be created)"""
+    """Path to save the data to (directly with env name will be created)"""

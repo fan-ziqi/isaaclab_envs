@@ -1,3 +1,9 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
 # All rights reserved.
 #
@@ -27,16 +33,16 @@ simulation_app = app_launcher.app
 """Rest everything follows."""
 
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit.utils import configclass
-from omni.isaac.orbit.assets import AssetBaseCfg
-from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
-from omni.isaac.orbit.sim import SimulationContext
-from omni.isaac.orbit.sensors import patterns
-from omni.isaac.orbit.assets import ArticulationCfg
-
+from omni.isaac.matterport.domains import (
+    MatterportRayCasterCameraCfg,
+    MatterportRayCasterCfg,
+)
 from omni.isaac.matterport.importer import MatterportImporterCfg
-from omni.isaac.matterport.domains import MatterportRayCasterCameraCfg, MatterportRayCasterCfg
-
+from omni.isaac.orbit.assets import ArticulationCfg, AssetBaseCfg
+from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
+from omni.isaac.orbit.sensors import patterns
+from omni.isaac.orbit.sim import SimulationContext
+from omni.isaac.orbit.utils import configclass
 
 ##
 # Pre-defined configs
@@ -177,7 +183,9 @@ def main():
     # Simulation loop
     while simulation_app.is_running():
         # set joint targets
-        scene.articulations["robot"].set_joint_position_target(scene.articulations["robot"].data.default_joint_pos.clone())
+        scene.articulations["robot"].set_joint_position_target(
+            scene.articulations["robot"].data.default_joint_pos.clone()
+        )
         # write data to sim
         scene.write_data_to_sim()
         # Perform step

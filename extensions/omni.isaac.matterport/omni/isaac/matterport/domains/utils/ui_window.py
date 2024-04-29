@@ -1,3 +1,9 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 from __future__ import annotations
 
 import asyncio
@@ -8,10 +14,9 @@ import omni.kit.app
 import omni.kit.commands
 import omni.ui
 import omni.usd
-from omni.kit.window.extensions import SimpleCheckBox
-
 from omni.isaac.orbit.scene import InteractiveScene
 from omni.isaac.orbit.sim import SimulationContext
+from omni.kit.window.extensions import SimpleCheckBox
 
 
 class SensorWindow:
@@ -51,9 +56,9 @@ class SensorWindow:
             # create main stack
             self.ui_window_elements["main_vstack"] = omni.ui.VStack(spacing=5, height=0)
             with self.ui_window_elements["main_vstack"]:
-                # create collapsable frame for simulation
+                # create collapsible frame for simulation
                 self._build_viewer_frame()
-                # create collapsable frame for debug visualization
+                # create collapsible frame for debug visualization
                 self._build_debug_vis_frame()
 
     def __del__(self):
@@ -70,7 +75,7 @@ class SensorWindow:
 
     def _build_viewer_frame(self):
         """Build the viewer-related control frame for the UI."""
-        # create collapsable frame for viewer
+        # create collapsible frame for viewer
         self.ui_window_elements["viewer_frame"] = omni.ui.CollapsableFrame(
             title="Viewer Settings",
             width=omni.ui.Fraction(1),
@@ -97,7 +102,7 @@ class SensorWindow:
                 self.ui_window_elements["viewer_env_index"] = ui_utils.int_builder(**viewport_origin_cfg)
                 # create a number slider to move to environment origin
                 self.ui_window_elements["viewer_env_index"].add_value_changed_fn(self._set_viewer_env_index_fn)
-    
+
     def _build_debug_vis_frame(self):
         """Builds the debug visualization frame for the cameras.
 
@@ -106,7 +111,7 @@ class SensorWindow:
         that has it implemented. If the element does not have a debug visualization implemented,
         a label is created instead.
         """
-        # create collapsable frame for debug visualization
+        # create collapsible frame for debug visualization
         self.ui_window_elements["debug_frame"] = omni.ui.CollapsableFrame(
             title="Scene Debug Visualization",
             width=omni.ui.Fraction(1),
@@ -152,7 +157,7 @@ class SensorWindow:
         # notify additional listeners
         for listener in self._env_selection_listeners:
             listener.set_env_selection(model.as_int - 1)
-    
+
     def _create_debug_vis_ui_element(self, name: str, elem: object):
         """Create a checkbox for toggling debug visualization for the given element."""
         with omni.ui.HStack():

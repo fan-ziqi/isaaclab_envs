@@ -1,5 +1,10 @@
-import numpy as np
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
 
+import numpy as np
 import omni.ui as ui
 from omni.isaac.ui.element_wrappers.base_ui_element_wrappers import UIWidgetWrapper
 from omni.kit.window.property.templates import LABEL_WIDTH
@@ -80,7 +85,6 @@ class ImagePlot(UIWidgetWrapper):
         )
 
     def _build_widget(self):
-
         with ui.VStack(spacing=3):
             with ui.HStack():
                 # Write the leftmost label for what this plot is

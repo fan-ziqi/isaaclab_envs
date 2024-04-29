@@ -213,7 +213,7 @@ class MatterportRayCasterCamera(RayCasterCamera):
     # def _debug_vis_callback(self, event):
     #     """Callback for the debug visualization event."""
     #     super()._debug_vis_callback(event)
-        
+
     #     if not hasattr(self, "image_visualizer") or not SimulationContext.instance().is_playing():
     #         # Visualizers have not been created yet.
     #         return

@@ -2,8 +2,8 @@
 
 
 
-Always use the matterport raycast camera. Matterport meshes are loaded as many different meshes which is currentlt not supported in Orbit. 
-Instead, the MatterportRaycaster uses the ply mesh which is a single mesh. 
+Always use the matterport raycast camera. Matterport meshes are loaded as many different meshes which is currentlt not supported in Orbit.
+Instead, the MatterportRaycaster uses the ply mesh which is a single mesh.
 
 ### Known issues
 

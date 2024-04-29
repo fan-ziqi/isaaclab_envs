@@ -1,3 +1,9 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Copyright (c) 2022-2024, The ORBIT Project Developers.
 # All rights reserved.
 #
@@ -8,20 +14,20 @@ from __future__ import annotations
 import os
 import pickle
 import random
-import torch
 
+import torch
 from omni.isaac.orbit.scene import InteractiveScene
 from omni.isaac.orbit.sim import SimulationContext
 
-from .trajectory_sampling_cfg import TrajectorySamplingCfg
 from .terrain_analysis import TerrainAnalysis
+from .trajectory_sampling_cfg import TrajectorySamplingCfg
 
 
 class TrajectorySampling:
     def __init__(self, cfg: TrajectorySamplingCfg, scene: InteractiveScene | None = None):
         # save cfg and env
         self.cfg = cfg
-        
+
         # get or setup scene
         if scene:
             self.scene = scene
@@ -64,7 +70,7 @@ class TrajectorySampling:
         if len(num_paths_to_explore) == 0:
             return data
 
-        # anaylse terrain if not done yet
+        # analyse terrain if not done yet
         if not self.terrain_analyser.complete:
             self.terrain_analyser.analyse()
 
@@ -75,7 +81,9 @@ class TrajectorySampling:
             num_paths_to_explore, min_path_length_to_explore, max_path_length_to_explore
         ):
             # get index of samples within length
-            within_length = (self.terrain_analyser.samples[:, 2] > min_len) & (self.terrain_analyser.samples[:, 2] <= max_len)
+            within_length = (self.terrain_analyser.samples[:, 2] > min_len) & (
+                self.terrain_analyser.samples[:, 2] <= max_len
+            )
 
             # randomly select certain pairs
             rand_idx = torch.randperm(self.terrain_analyser.samples.shape[0])

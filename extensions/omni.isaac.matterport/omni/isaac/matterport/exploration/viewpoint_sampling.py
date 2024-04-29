@@ -1,3 +1,9 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Copyright (c) 2022-2024, The ORBIT Project Developers.
 # All rights reserved.
 #
@@ -5,29 +11,29 @@
 
 from __future__ import annotations
 
-import numpy as np
 import os
 import pickle
 import random
-import torch
-import cv2
 import time
 
-from omni.isaac.orbit.scene import InteractiveScene
-from omni.isaac.orbit.sim import SimulationContext
+import cv2
+import numpy as np
 import omni.isaac.orbit.utils.math as math_utils
+import torch
 from omni.isaac.orbit.markers import VisualizationMarkers
 from omni.isaac.orbit.markers.config import GREEN_ARROW_X_MARKER_CFG
+from omni.isaac.orbit.scene import InteractiveScene
+from omni.isaac.orbit.sim import SimulationContext
 
-from .viewpoint_sampling_cfg import ViewpointSamplingCfg
 from .terrain_analysis import TerrainAnalysis
+from .viewpoint_sampling_cfg import ViewpointSamplingCfg
 
 
 class ViewpointSampling:
     def __init__(self, cfg: ViewpointSamplingCfg, scene: InteractiveScene | None = None):
         # save cfg and env
         self.cfg = cfg
-        
+
         # get or setup scene
         self.sim = SimulationContext.instance()
         if scene:
@@ -58,10 +64,10 @@ class ViewpointSampling:
         else:
             print(f"[INFO] No viewpoint samples found for seed {seed} and {nbr_viewpoints} samples.")
 
-        # anaylse terrain if not done yet
+        # analyse terrain if not done yet
         if not self.terrain_analyser.complete:
             self.terrain_analyser.analyse()
-        
+
         # set seed
         random.seed(seed)
         print(f"[INFO] Start sampling {nbr_viewpoints} viewpoints.")
@@ -76,19 +82,27 @@ class ViewpointSampling:
             # get samples
             sample_idx = self.terrain_analyser.samples[:, 0] == curr_env_idx
             sample_idx_select = torch.randperm(sample_idx.sum())[:nbr_samples_per_point]
-            sample_locations[sample_locations_count:sample_locations_count + sample_idx_select.shape[0]] = self.terrain_analyser.samples[sample_idx][sample_idx_select, :2]
+            sample_locations[
+                sample_locations_count : sample_locations_count + sample_idx_select.shape[0]
+            ] = self.terrain_analyser.samples[sample_idx][sample_idx_select, :2]
             sample_locations_count += sample_idx_select.shape[0]
             curr_env_idx += 1
 
         sample_locations = sample_locations[:sample_locations_count].type(torch.int64)
 
         # get the z angle of the neighbor that is closest to the origin point
-        neighbor_direction = self.terrain_analyser.points[sample_locations[:, 0]] - self.terrain_analyser.points[sample_locations[:, 1]]
+        neighbor_direction = (
+            self.terrain_analyser.points[sample_locations[:, 0]] - self.terrain_analyser.points[sample_locations[:, 1]]
+        )
         z_angles = torch.atan2(neighbor_direction[:, 1], neighbor_direction[:, 0])
 
-        # vary the rotation of the forward and horizontal axis (in camera frame) as a uniform distribution withion the limits
-        x_angles = math_utils.sample_uniform(self.cfg.x_angle_range[0], self.cfg.x_angle_range[1], sample_locations_count, device="cpu")
-        y_angles = math_utils.sample_uniform(self.cfg.y_angle_range[0], self.cfg.y_angle_range[1], sample_locations_count, device="cpu")
+        # vary the rotation of the forward and horizontal axis (in camera frame) as a uniform distribution within the limits
+        x_angles = math_utils.sample_uniform(
+            self.cfg.x_angle_range[0], self.cfg.x_angle_range[1], sample_locations_count, device="cpu"
+        )
+        y_angles = math_utils.sample_uniform(
+            self.cfg.y_angle_range[0], self.cfg.y_angle_range[1], sample_locations_count, device="cpu"
+        )
         x_angles = torch.deg2rad(x_angles)
         y_angles = torch.deg2rad(y_angles)
 
@@ -108,7 +122,7 @@ class ViewpointSampling:
 
             for i in range(env_render_steps):
                 self.sim.render()
-            
+
             self.visualizer.set_visibility(False)
             print("[INFO] Done visualizing.")
 
@@ -134,23 +148,27 @@ class ViewpointSampling:
         # save camera configurations
         print(f"[INFO] Saving camera configurations to {filedir}.")
         for cam in self.cfg.cameras.keys():
-            np.savetxt(os.path.join(filedir, cam, "intrinsics.txt"), self.scene.sensors[cam].data.intrinsic_matrices[0].cpu().numpy(), delimiter=",")
+            np.savetxt(
+                os.path.join(filedir, cam, "intrinsics.txt"),
+                self.scene.sensors[cam].data.intrinsic_matrices[0].cpu().numpy(),
+                delimiter=",",
+            )
 
         # save camera poses
-        np.savetxt(os.path.join(filedir, "camera_poses.txt"), samples.cpu().numpy(), delimiter=",")  
+        np.savetxt(os.path.join(filedir, "camera_poses.txt"), samples.cpu().numpy(), delimiter=",")
 
         # save images
         samples = samples.to(self.scene.device)
         for i in range(num_rounds):
-            # get samples idx 
+            # get samples idx
             samples_idx = torch.arange(i * num_envs, min((i + 1) * num_envs, samples.shape[0]))
             # set camera positions
             for cam in self.cfg.cameras.keys():
                 self.scene.sensors[cam].set_world_poses(
-                    positions = samples[samples_idx, :3],
-                    orientations = samples[samples_idx, 3:],
-                    env_ids = torch.arange(samples_idx.shape[0]),
-                    convention = "world",
+                    positions=samples[samples_idx, :3],
+                    orientations=samples[samples_idx, 3:],
+                    env_ids=torch.arange(samples_idx.shape[0]),
+                    convention="world",
                 )
             # update simulation
             self.scene.write_data_to_sim()
@@ -158,7 +176,7 @@ class ViewpointSampling:
             # render
             start_time = time.time()
             for cam, annotator in self.cfg.cameras.items():
-                image_data_np = self.scene.sensors[cam].data.output[annotator].cpu().numpy()                
+                image_data_np = self.scene.sensors[cam].data.output[annotator].cpu().numpy()
                 # filter nan
                 image_data_np[np.isnan(image_data_np)] = 0
                 # filter inf
@@ -178,7 +196,7 @@ class ViewpointSampling:
                             os.path.join(filedir, cam, annotator, f"{image_idx}".zfill(4) + ".png"),
                             np.uint16(image_data_np[idx] * self.cfg.depth_scale),
                         )
-                    
+
                     image_idx += 1
 
                     if image_idx % 100 == 0:

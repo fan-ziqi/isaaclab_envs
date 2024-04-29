@@ -1,6 +1,13 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 from omni.isaac.orbit.utils import configclass
 
 from .exploration_cfg import ExplorationCfg
+
 
 @configclass
 class ViewpointSamplingCfg(ExplorationCfg):
@@ -42,8 +49,8 @@ class ViewpointSamplingCfg(ExplorationCfg):
 
     # SAVING
     save_path: str | None = "/home/pascal/viplanner/imperative_learning/data/temp"
-    """Directory to save the viewpoint samples, camera intrinsics and rendered images to. 
-    
+    """Directory to save the viewpoint samples, camera intrinsics and rendered images to.
+
     If None, the directory is the same as the one of the obj file. Default is None."""
 
     # debug

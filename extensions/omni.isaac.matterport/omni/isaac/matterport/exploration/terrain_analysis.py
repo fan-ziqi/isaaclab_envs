@@ -1,3 +1,9 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Copyright (c) 2022-2024, The ORBIT Project Developers.
 # All rights reserved.
 #
@@ -5,24 +11,23 @@
 
 from __future__ import annotations
 
+from dataclasses import MISSING
+
+import networkx as nx
 import numpy as np
 import scipy.spatial.transform as tf
 import torch
-from dataclasses import MISSING
-from scipy.spatial import KDTree
-from scipy.stats import qmc
-
-import networkx as nx
-from skimage.draw import line
-
-
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.matterport.domains import MatterportRayCaster, MatterportRayCasterCamera
 from omni.isaac.orbit.scene import InteractiveScene
 from omni.isaac.orbit.sim import SimulationContext
+from omni.isaac.orbit.utils import configclass
 from omni.isaac.orbit.utils.warp import raycast_mesh
+from scipy.spatial import KDTree
+from scipy.stats import qmc
+from skimage.draw import line
 
-from omni.isaac.matterport.domains import MatterportRayCaster, MatterportRayCasterCamera
 from .matterport_class_cost import MatterportSemanticCostMapping
+
 
 @configclass
 class TerrainAnalysisCfg:
@@ -81,7 +86,9 @@ class TerrainAnalysis:
     def _sample_points(self):
         # get the raycaster sensor that should be used to raycast against all the ground meshes
         if isinstance(self.scene.sensors[self.cfg.raycaster_sensor], MatterportRayCaster | MatterportRayCasterCamera):
-            self._raycaster: MatterportRayCaster | MatterportRayCasterCamera = self.scene.sensors[self.cfg.raycaster_sensor]
+            self._raycaster: MatterportRayCaster | MatterportRayCasterCamera = self.scene.sensors[
+                self.cfg.raycaster_sensor
+            ]
         else:
             raise ValueError(f"Sensor {self.cfg.raycaster_sensor} is not a RayCaster sensor")
 
@@ -128,13 +135,23 @@ class TerrainAnalysis:
         # filter connections that collide with the environment
         idx_edge_start, idx_edge_end, distance = self._edge_filter_mesh_collisions(nearest_neighbors_idx)
 
-        idx_edge_start, idx_edge_end, distance, idx_edge_start_filtered, idx_edge_end_filtered = (
-            self._edge_filter_height_diff(idx_edge_start, idx_edge_end, distance)
-        )
+        (
+            idx_edge_start,
+            idx_edge_end,
+            distance,
+            idx_edge_start_filtered,
+            idx_edge_end_filtered,
+        ) = self._edge_filter_height_diff(idx_edge_start, idx_edge_end, distance)
 
         # filter edges based on semantic cost
         if self.cfg.semantic_cost_mapping is not None:
-            idx_edge_start, idx_edge_end, distance, idx_edge_start_filtered_sem, idx_edge_end_filtered_sem = self._edge_filter_semantic_cost(idx_edge_start, idx_edge_end, distance)
+            (
+                idx_edge_start,
+                idx_edge_end,
+                distance,
+                idx_edge_start_filtered_sem,
+                idx_edge_end_filtered_sem,
+            ) = self._edge_filter_semantic_cost(idx_edge_start, idx_edge_end, distance)
 
         # init graph
         print(f"[INFO] Constructing graph with {idx_edge_start.shape[0]} edges")
@@ -170,7 +187,7 @@ class TerrainAnalysis:
         if self.cfg.viz_graph:
             env_render_steps = 1000
             print(f"[INFO] Visualizing graph. Will do {env_render_steps} render steps...")
-            
+
             # in headless mode, we cannot visualize the graph and omni.debug.draw is not available
             try:
                 import omni.isaac.debug_draw._debug_draw as omni_debug_draw
@@ -203,7 +220,7 @@ class TerrainAnalysis:
                             [(1, 0, 0, 1)],
                             [1],
                         )
-                
+
                 sim = SimulationContext.instance()
                 for _ in range(env_render_steps):
                     sim.render()
@@ -314,15 +331,17 @@ class TerrainAnalysis:
 
             # get class_id to cost mapping
             assert self.cfg.semantic_cost_mapping is not None, "Semantic cost mapping is not available"
-            class_id_to_cost = torch.ones(len(self._raycaster.classes_mpcat40)) * max(list(self.cfg.semantic_cost_mapping.to_dict().values()))
+            class_id_to_cost = torch.ones(len(self._raycaster.classes_mpcat40)) * max(
+                list(self.cfg.semantic_cost_mapping.to_dict().values())
+            )
             for class_name, class_cost in self.cfg.semantic_cost_mapping.to_dict().items():
                 class_id_to_cost[self._raycaster.classes_mpcat40 == class_name] = class_cost
-            
+
         else:
             # TODO: Implement for unreal engine meshes
             raise NotImplementedError("Semantic cost filtering is only available for MatterportRayCaster sensors")
-        
-        # get cost 
+
+        # get cost
         cost = class_id_to_cost[class_id.cpu()]
 
         # filter points based on cost
@@ -474,7 +493,9 @@ class TerrainAnalysis:
 
             # get class_id to cost mapping
             assert self.cfg.semantic_cost_mapping is not None, "Semantic cost mapping is not available"
-            class_id_to_cost = torch.ones(len(self._raycaster.classes_mpcat40)) * max(list(self.cfg.semantic_cost_mapping.to_dict().values()))
+            class_id_to_cost = torch.ones(len(self._raycaster.classes_mpcat40)) * max(
+                list(self.cfg.semantic_cost_mapping.to_dict().values())
+            )
             for class_name, class_cost in self.cfg.semantic_cost_mapping.to_dict().items():
                 class_id_to_cost[self._raycaster.classes_mpcat40 == class_name] = class_cost
 
@@ -484,10 +505,14 @@ class TerrainAnalysis:
 
         # get cost grid
         cost = class_id_to_cost[class_id.cpu()]
-        cost_grid = cost.reshape(
-            int((x_max - x_min) / self.cfg.grid_resolution), int((y_max - y_min) / self.cfg.grid_resolution)
-        ).cpu().numpy()
-        
+        cost_grid = (
+            cost.reshape(
+                int((x_max - x_min) / self.cfg.grid_resolution), int((y_max - y_min) / self.cfg.grid_resolution)
+            )
+            .cpu()
+            .numpy()
+        )
+
         # get grid indexes of edges
         check_grid_idx_start = (
             ((self.points[idx_edge_start, :2] - torch.tensor([x_min, y_min])) / self.cfg.grid_resolution)

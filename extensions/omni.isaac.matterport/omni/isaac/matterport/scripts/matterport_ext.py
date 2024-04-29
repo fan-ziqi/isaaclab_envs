@@ -6,27 +6,18 @@
 
 import asyncio
 import gc
-
-# python
 import os
 
 import carb
-
-# omni
 import omni
 import omni.client
 import omni.ext
 import omni.isaac.core.utils.prims as prim_utils
 import omni.isaac.core.utils.stage as stage_utils
-
-# isaac-core
 import omni.ui as ui
-import torch
 from omni.isaac.matterport.importer import MatterportImporter
 from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
 from omni.isaac.orbit.sim import SimulationCfg, SimulationContext
-
-# omni-isaac-ui
 from omni.isaac.ui.ui_utils import (
     btn_builder,
     cb_builder,
@@ -38,7 +29,6 @@ from omni.isaac.ui.ui_utils import (
     str_builder,
 )
 
-# omni-isaac-matterport
 from .ext_cfg import MatterportExtConfig
 from .matterport_domains import MatterportDomains
 

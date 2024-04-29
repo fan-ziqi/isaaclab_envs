@@ -1,6 +1,13 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 from omni.isaac.orbit.utils import configclass
 
 from .exploration_cfg import ExplorationCfg
+
 
 @configclass
 class TrajectorySamplingCfg(ExplorationCfg):
@@ -36,4 +43,4 @@ class TrajectorySamplingCfg(ExplorationCfg):
     """Maximum number of images recorded"""
     save_path: str = "/home/pascal/viplanner/imperative_learning/data"
     suffix: str | None = "cam_mount"
-    """Path to save the data to (directy with env name will be created)"""
+    """Path to save the data to (directly with env name will be created)"""
