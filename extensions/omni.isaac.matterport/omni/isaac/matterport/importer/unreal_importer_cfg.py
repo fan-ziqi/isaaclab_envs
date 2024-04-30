@@ -1,4 +1,4 @@
-# Copyright (c) 2023 ETH Zurich (Robotics Systems Lab)
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
 # Author: Pascal Roth
 # All rights reserved.
 #
@@ -25,12 +25,14 @@ class UnRealImporterCfg(TerrainImporterCfg):
     # up axis
     axis_up: str = "Y"  # carla, nomoko: "Y", park, warehouse: "Z"
     duplicate_cfg_file: str | list | None = None
-    """Configuration file(s) to duplicate prims in the scene. 
-    
+    """Configuration file(s) to duplicate prims in the scene.
+
     Selected prims are clone by the provoided factor and moved to the defined location. Default is None."""
 
     # mesh to semantic class mapping --> only if set, semantic classes will be added to the scene
-    sem_mesh_to_class_map: str | None = None  # os.path.join(DATA_DIR, "park", "keyword_mapping.yml")  os.path.join(DATA_DIR, "town01", "keyword_mapping.yml")
+    sem_mesh_to_class_map: str | None = (
+        None  # os.path.join(DATA_DIR, "park", "keyword_mapping.yml")  os.path.join(DATA_DIR, "town01", "keyword_mapping.yml")
+    )
     # add Groundplane to the scene
     groundplane: bool = True
     # add people to the scene

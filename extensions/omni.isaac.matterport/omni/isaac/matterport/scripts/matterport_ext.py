@@ -138,7 +138,10 @@ class MatterPortExtension(omni.ext.IExt):
                 self._input_fields["friction_dynamic"] = float_builder(
                     "Dynamic Friction",
                     default_val=self._config.importer.physics_material.dynamic_friction,
-                    tooltip=f"Sets the dynamic friction of the physics material (default: {self._config.importer.physics_material.dynamic_friction})",
+                    tooltip=(
+                        "Sets the dynamic friction of the physics material (default:"
+                        f" {self._config.importer.physics_material.dynamic_friction})"
+                    ),
                 )
                 self._input_fields["friction_dynamic"].add_value_changed_fn(
                     lambda m, config=self._config: config.set_friction_dynamic(m.get_value_as_float())
@@ -146,7 +149,10 @@ class MatterPortExtension(omni.ext.IExt):
                 self._input_fields["friction_static"] = float_builder(
                     "Static Friction",
                     default_val=self._config.importer.physics_material.static_friction,
-                    tooltip=f"Sets the static friction of the physics material (default: {self._config.importer.physics_material.static_friction})",
+                    tooltip=(
+                        "Sets the static friction of the physics material (default:"
+                        f" {self._config.importer.physics_material.static_friction})"
+                    ),
                 )
                 self._input_fields["friction_static"].add_value_changed_fn(
                     lambda m, config=self._config: config.set_friction_static(m.get_value_as_float())
@@ -154,7 +160,10 @@ class MatterPortExtension(omni.ext.IExt):
                 self._input_fields["restitution"] = float_builder(
                     "Restitution",
                     default_val=self._config.importer.physics_material.restitution,
-                    tooltip=f"Sets the restitution of the physics material (default: {self._config.importer.physics_material.restitution})",
+                    tooltip=(
+                        "Sets the restitution of the physics material (default:"
+                        f" {self._config.importer.physics_material.restitution})"
+                    ),
                 )
                 self._input_fields["restitution"].add_value_changed_fn(
                     lambda m, config=self._config: config.set_restitution(m.get_value_as_float())
@@ -167,7 +176,10 @@ class MatterPortExtension(omni.ext.IExt):
                         self._config.importer.physics_material.friction_combine_mode
                     ),
                     on_clicked_fn=lambda mode_str, config=self._config: config.set_friction_combine_mode(mode_str),
-                    tooltip=f"Sets the friction combine mode of the physics material (default: {self._config.importer.physics_material.friction_combine_mode})",
+                    tooltip=(
+                        "Sets the friction combine mode of the physics material (default:"
+                        f" {self._config.importer.physics_material.friction_combine_mode})"
+                    ),
                 )
                 dropdown_builder(
                     "Restitution Combine Mode",
@@ -176,11 +188,17 @@ class MatterPortExtension(omni.ext.IExt):
                         self._config.importer.physics_material.restitution_combine_mode
                     ),
                     on_clicked_fn=lambda mode_str, config=self._config: config.set_restitution_combine_mode(mode_str),
-                    tooltip=f"Sets the friction combine mode of the physics material (default: {self._config.importer.physics_material.restitution_combine_mode})",
+                    tooltip=(
+                        "Sets the friction combine mode of the physics material (default:"
+                        f" {self._config.importer.physics_material.restitution_combine_mode})"
+                    ),
                 )
                 cb_builder(
                     label="Improved Patch Friction",
-                    tooltip=f"Sets the improved patch friction of the physics material (default: {self._config.importer.physics_material.improve_patch_friction})",
+                    tooltip=(
+                        "Sets the improved patch friction of the physics material (default:"
+                        f" {self._config.importer.physics_material.improve_patch_friction})"
+                    ),
                     on_clicked_fn=lambda m, config=self._config: config.set_improved_patch_friction(m),
                     default_val=self._config.importer.physics_material.improve_patch_friction,
                 )
@@ -261,7 +279,10 @@ class MatterPortExtension(omni.ext.IExt):
                 )
                 self._input_fields["camera_depth"] = cb_builder(
                     label="Enable Distance to Camera Frame",
-                    tooltip="Enable access to the depth information of the mesh - no additional compute effort (default: True)",
+                    tooltip=(
+                        "Enable access to the depth information of the mesh - no additional compute effort (default:"
+                        " True)"
+                    ),
                     default_val=True,
                 )
 

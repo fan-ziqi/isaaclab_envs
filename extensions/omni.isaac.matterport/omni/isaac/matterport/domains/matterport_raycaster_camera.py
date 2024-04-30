@@ -7,7 +7,8 @@
 from __future__ import annotations
 
 import os
-from typing import ClassVar, Sequence
+from collections.abc import Sequence
+from typing import ClassVar
 
 import carb
 import numpy as np

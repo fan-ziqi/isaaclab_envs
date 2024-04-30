@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     # show trajectories
     show_trajectories = True
-    repeated_trajectories: Optional[int] = 5
+    repeated_trajectories: int | None = 5
     if show_trajectories:
         # Acquire draw interface
         draw_interface = omni_debug_draw.acquire_debug_draw_interface()
@@ -169,19 +169,17 @@ if __name__ == "__main__":
 
         # draw circle around waypoints
         cfg_vip = VIPlannerCfg()
-        circ_coord = np.array(
-            [
-                [cfg_vip.conv_dist, 0, 0],
-                [0, cfg_vip.conv_dist, 0],
-                [-cfg_vip.conv_dist, 0, 0],
-                [0, -cfg_vip.conv_dist, 0],
-                [cfg_vip.conv_dist, 0, 0],
-                [0, cfg_vip.conv_dist, 0],
-                [-cfg_vip.conv_dist, 0, 0],
-                [0, -cfg_vip.conv_dist, 0],
-                [cfg_vip.conv_dist, 0, 0],
-            ]
-        )
+        circ_coord = np.array([
+            [cfg_vip.conv_dist, 0, 0],
+            [0, cfg_vip.conv_dist, 0],
+            [-cfg_vip.conv_dist, 0, 0],
+            [0, -cfg_vip.conv_dist, 0],
+            [cfg_vip.conv_dist, 0, 0],
+            [0, cfg_vip.conv_dist, 0],
+            [-cfg_vip.conv_dist, 0, 0],
+            [0, -cfg_vip.conv_dist, 0],
+            [cfg_vip.conv_dist, 0, 0],
+        ])
         for waypoint in waypoints["waypoints"]:
             draw_interface.draw_lines_spline(
                 [tuple(circ_curr) for circ_curr in (circ_coord + waypoint).tolist()],

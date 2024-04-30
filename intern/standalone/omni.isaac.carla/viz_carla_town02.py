@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     # show trajectories
     show_trajectories = False
-    repeated_trajectories: Optional[int] = 1
+    repeated_trajectories: int | None = 1
     if show_trajectories:
         # Acquire draw interface
         draw_interface = omni_debug_draw.acquire_debug_draw_interface()

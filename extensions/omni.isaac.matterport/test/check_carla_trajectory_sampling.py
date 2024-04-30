@@ -4,6 +4,11 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES, ETH Zurich, and University of Toronto
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 """
 This script demonstrates how to use the rigid objects class.
 """
@@ -26,56 +31,56 @@ app_launcher = AppLauncher(headless=args_cli.headless)
 simulation_app = app_launcher.app
 
 """Rest everything follows."""
+import omni.isaac.orbit.sim as sim_utils
+from omni.isaac.matterport.exploration import TrajectorySampling, TrajectorySamplingCfg
+from omni.isaac.orbit.sim import SimulationContext
 
 import os
 
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.matterport.domains import DATA_DIR
-from omni.isaac.matterport.importer import UnRealImporterCfg
-from omni.isaac.orbit.assets import ArticulationCfg, AssetBaseCfg
-from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
-from omni.isaac.orbit.sensors import CameraCfg, patterns
 from omni.isaac.orbit.sim import SimulationContext
+
+from omni.isaac.orbit.assets import AssetBaseCfg
+from omni.isaac.orbit.scene import InteractiveSceneCfg
+from omni.isaac.orbit.sensors import CameraCfg
 from omni.isaac.orbit.utils import configclass
 
-##
-# Pre-defined configs
-##
-from omni.isaac.orbit_assets.anymal import ANYMAL_C_CFG  # isort: skip
+from omni.isaac.matterport.importer import UnRealImporterCfg
+from omni.isaac.matterport.domains import DATA_DIR
+from omni.isaac.matterport.exploration.carla_class_cost import CarlaSemanticCostMapping
 
 """
-Environment Configuration
+Main
 """
-
-
 @configclass
 class TestTerrainCfg(InteractiveSceneCfg):
     """Configuration for a matterport terrain scene with a camera."""
 
     # ground terrain
     terrain = UnRealImporterCfg(
-        prim_path="/World/Warehouse",
+        prim_path="/World/Carla",
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
             restitution_combine_mode="multiply",
             static_friction=1.0,
             dynamic_friction=1.0,
         ),
-        usd_path="/home/pascal/viplanner/env/warehouse/warehouse_new.usd",
+        usd_path="/home/pascal/viplanner/env/carla_exp/carla.usd",
         groundplane=True,
-        sem_mesh_to_class_map=os.path.join(DATA_DIR, "nvidia", "warehouse", "keyword_mapping.yml"),
-        people_config_file=os.path.join(DATA_DIR, "nvidia", "warehouse", "people_cfg.yml"),
-        axis_up="Z",
+        duplicate_cfg_file=[os.path.join(DATA_DIR, "unreal", "town01", "cw_multiply_cfg.yml"), os.path.join(DATA_DIR, "unreal", "town01", "vehicle_cfg.yml")],
+        sem_mesh_to_class_map=os.path.join(DATA_DIR, "unreal", "town01", "keyword_mapping.yml"),
+        people_config_file=os.path.join(DATA_DIR, "unreal", "town01", "people_cfg.yml"),
+        axis_up="Y",
     )
-    # articulation
-    robot: ArticulationCfg = ANYMAL_C_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
     # camera
     semantic_camera = CameraCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/base/front_sem_cam",
+        prim_path="{ENV_REGEX_NS}/sem_cam",
         update_period=0,
         data_types=["semantic_segmentation"],
         debug_vis=True,
-        offset=CameraCfg.OffsetCfg(pos=(0.419, -0.025, -0.020), rot=(0.992, 0.008, 0.127, 0.001), convention="world"),
+        offset=CameraCfg.OffsetCfg(
+            pos=(0.419, -0.025, -0.020), rot=(0.992, 0.008, 0.127, 0.001), convention="world"
+        ),
         height=720,
         width=1280,
         spawn=sim_utils.PinholeCameraCfg(
@@ -84,11 +89,13 @@ class TestTerrainCfg(InteractiveSceneCfg):
         ),
     )
     depth_camera = CameraCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/base/front_depth_cam",
+        prim_path="{ENV_REGEX_NS}/depth_cam",
         update_period=0,
         data_types=["distance_to_image_plane"],
         debug_vis=False,
-        offset=CameraCfg.OffsetCfg(pos=(0.419, -0.025, -0.020), rot=(0.992, 0.008, 0.127, 0.001), convention="world"),
+        offset=CameraCfg.OffsetCfg(
+            pos=(0.419, -0.025, -0.020), rot=(0.992, 0.008, 0.127, 0.001), convention="world"
+        ),
         height=480,
         width=848,
         spawn=sim_utils.PinholeCameraCfg(
@@ -104,40 +111,37 @@ class TestTerrainCfg(InteractiveSceneCfg):
     )
 
 
-"""
-Main
-"""
-
-
 def main():
     """Main function."""
     # Load kit helper
     sim_cfg = sim_utils.SimulationCfg()
     sim = SimulationContext(sim_cfg)
     # Set main camera
-    sim.set_camera_view([10.0, 1.5, 2.0], [8.0, -1.0, 0.5])
-    # Design scene
-    scene_cfg = TestTerrainCfg(num_envs=args_cli.num_envs, env_spacing=2.0)
-    scene = InteractiveScene(scene_cfg)
-    # Play the simulator
-    sim.reset()
+    sim.set_camera_view([130, -125, 30], [100, -130, 0.5])
+
+    cfg = TrajectorySamplingCfg()
+    # overwrite semantic cost mapping and adjust parameters based on larger map
+    cfg.terrain_analysis.semantic_cost_mapping = CarlaSemanticCostMapping()
+    cfg.terrain_analysis.grid_resolution = 1.0
+    cfg.terrain_analysis.sample_points = 10000
+    # enable debug visualization
+    cfg.terrain_analysis.viz_graph = True
+
+    explorer = TrajectorySampling(cfg)
     # Now we are ready!
     print("[INFO]: Setup complete...")
 
-    # Define simulation stepping
-    sim_dt = sim.get_physics_dt()
+    # sample trajectories
+    samples = explorer.sample_paths([1000, 1000], [0.0, 10.0], [10.0, 20.0])
+
+    print(
+        "[INFO]: Trajectories sampled and simulation will continue to render the environment..."
+    )
+
     # Simulation loop
     while simulation_app.is_running():
-        # set joint targets
-        scene.articulations["robot"].set_joint_position_target(
-            scene.articulations["robot"].data.default_joint_pos.clone()
-        )
-        # write data to sim
-        scene.write_data_to_sim()
         # Perform step
-        sim.step()
-        # Update buffers
-        scene.update(sim_dt)
+        sim.render()
 
 
 if __name__ == "__main__":

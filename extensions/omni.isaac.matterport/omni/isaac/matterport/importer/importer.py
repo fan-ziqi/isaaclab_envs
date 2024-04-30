@@ -130,8 +130,8 @@ class MatterportImporter(TerrainImporter):
     def load_matterport_sync(self):
         base_path, _ = os.path.splitext(self.cfg.obj_filepath)
         assert os.path.exists(base_path + ".usd"), (
-            "Matterport load sync can only handle '.usd' files not obj files. "
-            "Please use the async function to convert the obj file to usd first (accessed over the extension in the GUI)"
+            "Matterport load sync can only handle '.usd' files not obj files. Please use the async function to convert"
+            " the obj file to usd first (accessed over the extension in the GUI)"
         )
 
         self._xform_prim = prim_utils.create_prim(

@@ -143,13 +143,11 @@ def main():
         # Set pose
         eyes = torch.tensor([[5, -10, 1]], device=camera.device)  # [[2.5, 2.5, 2.5]]
         targets = torch.tensor(
-            [
-                [
-                    5 + math.cos(2 * math.pi * camera.frame[0] / 1000),
-                    -10 + math.sin(2 * math.pi * camera.frame[0] / 1000),
-                    0.0,
-                ]
-            ],
+            [[
+                5 + math.cos(2 * math.pi * camera.frame[0] / 1000),
+                -10 + math.sin(2 * math.pi * camera.frame[0] / 1000),
+                0.0,
+            ]],
             device=camera.device,
         )
         camera.set_world_poses_from_view(eyes, targets)

@@ -12,6 +12,7 @@ TRAVERSABLE_COST = 0.0
 TRAVERSABLE_UNINTENDED_LOSS = 0.5
 TERRAIN_LOSS = 1.0
 
+
 @configclass
 class CarlaSemanticCostMapping:
     # Mapping from Carla categories to some example cost values

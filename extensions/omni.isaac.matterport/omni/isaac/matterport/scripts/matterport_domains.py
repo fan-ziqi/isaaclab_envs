@@ -4,8 +4,6 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Dict
-
 import carb
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -39,7 +37,7 @@ class MatterportDomains:
         self._cfg: MatterportExtConfig = cfg
 
         # setup camera list
-        self.cameras: Dict[str, MatterportRayCasterCamera] = {}
+        self.cameras: dict[str, MatterportRayCasterCamera] = {}
 
         # setup camera visualization
         self.figures = {}

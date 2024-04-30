@@ -6,70 +6,25 @@
 
 from __future__ import annotations
 
-from dataclasses import MISSING
-
+import carb
 import networkx as nx
 import numpy as np
+import omni.isaac.core.utils.prims as prims_utils
 import scipy.spatial.transform as tf
 import torch
+from omni.isaac.core.utils.semantics import get_semantics
 from omni.isaac.matterport.domains import MatterportRayCaster, MatterportRayCasterCamera
+from omni.isaac.matterport.utils.prims import get_all_meshes
 from omni.isaac.orbit.scene import InteractiveScene
 from omni.isaac.orbit.sim import SimulationContext
-from omni.isaac.orbit.utils import configclass
 from omni.isaac.orbit.utils.warp import raycast_mesh
+from omni.physx import get_physx_scene_query_interface
+from pxr import Gf, Usd, UsdGeom
 from scipy.spatial import KDTree
 from scipy.stats import qmc
 from skimage.draw import line
-from pxr import Gf, Usd, UsdGeom
 
-from omni.isaac.core.utils.semantics import get_semantics
-import omni.isaac.core.utils.prims as prims_utils
-
-from omni.physx import get_physx_scene_query_interface
-import carb
-
-from omni.isaac.matterport.utils.prims import get_all_meshes
-from .matterport_class_cost import MatterportSemanticCostMapping
-
-
-
-@configclass
-class TerrainAnalysisCfg:
-    robot_height: float = 0.6
-    """Height of the robot"""
-    wall_height: float = 1.0
-    """Height of the walls.
-
-    Wall filtering will start rays from that height and filter all that hit the mesh within 0.3m."""
-    robot_buffer_spawn: float = 0.7
-    """Robot buffer for spawn location"""
-    sample_points: int = 1000
-    """Number of nodes in the tree"""
-    max_path_length: float = 10.0
-    """Maximum distance from the start location to the goal location"""
-    num_connections: int = 5
-    """Number of connections to make in the graph"""
-    raycaster_sensor: str | None = None
-    """Name of the raycaster sensor to use for terrain analysis.
-    
-    If None, the terrain analysis will be done on the USD stage. Default is None."""
-    grid_resolution: float = 0.1
-    """Resolution of the grid to check for not traversable edges"""
-    height_diff_threshold: float = 0.3
-    """Threshold for height difference between two points"""
-    viz_graph: bool = True
-    """Visualize the graph after the construction for a short amount of time."""
-
-    semantic_cost_mapping: object | None = MatterportSemanticCostMapping()
-    """Mapping of semantic categories to costs for filtering edges and nodes"""
-    semantic_cost_threshold: float = 0.5
-    """Threshold for semantic cost filtering"""
-
-    dim_limiter_prim: str | None = None
-    """Prim name that should be used to limit the dimensions of the mesh.
-     
-    All meshes including this prim string are used to set the range in which the graph is constructed and samples are 
-    generated. If None, all meshes are considered."""
+from .terrain_analysis_cfg import TerrainAnalysisCfg
 
 
 class TerrainAnalysis:
@@ -109,7 +64,7 @@ class TerrainAnalysis:
             # raycaster is not available in unreal meshes as it only works with a single mesh
             # TODO (@pascal-roth) change when raycaster can handle multiple meshes
             self._raycaster = None
-            
+
             # get mesh dimensions
             x_max, y_max, x_min, y_min = self._get_usd_stage_dimensions()
 
@@ -274,7 +229,7 @@ class TerrainAnalysis:
     def _get_usd_stage_dimensions(self) -> tuple[float, float, float, float]:
         # get all mesh prims
         mesh_prims, mesh_prims_name = get_all_meshes(self.scene.terrain.cfg.prim_path)
-        
+
         # if space limiter is given, only consider the meshes with the space limiter in the name
         if self.cfg.dim_limiter_prim:
             mesh_idx = [
@@ -285,7 +240,7 @@ class TerrainAnalysis:
         else:
             # remove ground plane since has infinite extent
             mesh_idx = [idx for idx, prim_name in enumerate(mesh_prims_name) if "groundplane" not in prim_name.lower()]
-        
+
         mesh_prims = [mesh_prims[idx] for idx in mesh_idx]
 
         bbox_cache = UsdGeom.BBoxCache(Usd.TimeCode.Default(), ["default", "render"])
@@ -313,7 +268,7 @@ class TerrainAnalysis:
         bound = cache.ComputeWorldBound(prim)
         bound_range = bound.ComputeAlignedBox()
         return bound_range
-    
+
     ###
     # Point filter functions
     ###
@@ -344,8 +299,9 @@ class TerrainAnalysis:
         filter_outside_wall = z_depth > 0.3  # inside wall
         filter_combined = torch.all(torch.stack((filter_inside_mesh, filter_outside_wall), dim=1), dim=1)
         print(
-            f"[DEBUG] filtered {round(float((1 - filter_combined.sum() / self.cfg.sample_points) * 100), 4)}"
-            f" % of points ({self.cfg.sample_points - filter_inside_mesh.sum()} outside of the mesh and {self.cfg.sample_points - filter_outside_wall.sum()} points inside wall)"
+            f"[DEBUG] filtered {round(float((1 - filter_combined.sum() / self.cfg.sample_points) * 100), 4)} % of"
+            f" points ({self.cfg.sample_points - filter_inside_mesh.sum()} outside of the mesh and"
+            f" {self.cfg.sample_points - filter_outside_wall.sum()} points inside wall)"
         )
 
         return ray_origins[filter_combined].type(torch.float32), z_depth[filter_combined], heights[filter_combined]
@@ -382,7 +338,7 @@ class TerrainAnalysis:
         # check if every point has the minimum distance in every direction
         without_wall = torch.all(torch.vstack(ray_hit), dim=0)
 
-        print(f"[INFO] filtered {ray_origins.shape[0] - without_wall.sum().item()} points too close to walls")
+        print(f"[DEBUG] filtered {ray_origins.shape[0] - without_wall.sum().item()} points too close to walls")
         ray_origins = ray_origins[without_wall].type(torch.float32)
         heights = heights[without_wall]
         return ray_origins, heights
@@ -429,11 +385,14 @@ class TerrainAnalysis:
             # get class to cost mapping
             assert self.cfg.semantic_cost_mapping is not None, "Semantic cost mapping is not available"
             max_cost = max(list(self.cfg.semantic_cost_mapping.to_dict().values()))
-            cost = torch.tensor([self.cfg.semantic_cost_mapping.to_dict()[ray_class] if ray_class is not None else max_cost for ray_class in ray_classes])
+            cost = torch.tensor([
+                self.cfg.semantic_cost_mapping.to_dict()[ray_class] if ray_class is not None else max_cost
+                for ray_class in ray_classes
+            ])
 
         # filter points based on cost
         filter_cost = cost < self.cfg.semantic_cost_threshold
-        print(f"[INFO] filtered {ray_origins.shape[0] - filter_cost.sum().item()} points based on semantic cost")
+        print(f"[DEBUG] filtered {ray_origins.shape[0] - filter_cost.sum().item()} points based on semantic cost")
         return ray_origins[filter_cost].type(torch.float32)
 
     ###
@@ -474,7 +433,8 @@ class TerrainAnalysis:
             )[0]
 
         height_grid = hit_point[:, 2].reshape(
-            int(np.ceil((x_max - x_min) / self.cfg.grid_resolution)), int(np.ceil((y_max - y_min) / self.cfg.grid_resolution))
+            int(np.ceil((x_max - x_min) / self.cfg.grid_resolution)),
+            int(np.ceil((y_max - y_min) / self.cfg.grid_resolution)),
         )
 
         # compute height difference
@@ -606,7 +566,7 @@ class TerrainAnalysis:
             )
             for class_name, class_cost in self.cfg.semantic_cost_mapping.to_dict().items():
                 class_id_to_cost[self._raycaster.classes_mpcat40 == class_name] = class_cost
-            
+
             cost = class_id_to_cost[class_id.cpu()]
         else:
             ray_classes = self._raycast_usd_stage(
@@ -619,12 +579,16 @@ class TerrainAnalysis:
             # get class to cost mapping
             assert self.cfg.semantic_cost_mapping is not None, "Semantic cost mapping is not available"
             max_cost = max(list(self.cfg.semantic_cost_mapping.to_dict().values()))
-            cost = torch.tensor([self.cfg.semantic_cost_mapping.to_dict()[ray_class] if ray_class is not None else max_cost for ray_class in ray_classes])
-        
+            cost = torch.tensor([
+                self.cfg.semantic_cost_mapping.to_dict()[ray_class] if ray_class is not None else max_cost
+                for ray_class in ray_classes
+            ])
+
         # get cost grid
         cost_grid = (
             cost.reshape(
-                int(np.ceil((x_max - x_min) / self.cfg.grid_resolution)), int(np.ceil((y_max - y_min) / self.cfg.grid_resolution))
+                int(np.ceil((x_max - x_min) / self.cfg.grid_resolution)),
+                int(np.ceil((y_max - y_min) / self.cfg.grid_resolution)),
             )
             .cpu()
             .numpy()
@@ -665,44 +629,57 @@ class TerrainAnalysis:
     # Helper function when orbit raycaster is not available
     ###
 
-    def _raycast_usd_stage(self, ray_starts: torch.Tensor, ray_directions: torch.Tensor, max_dist: float = 1e6, return_distance: bool = False, return_normal: bool = False, return_class: bool = False) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None, list | None]:
+    def _raycast_usd_stage(
+        self,
+        ray_starts: torch.Tensor,
+        ray_directions: torch.Tensor,
+        max_dist: float = 1e6,
+        return_distance: bool = False,
+        return_normal: bool = False,
+        return_class: bool = False,
+    ) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None, list | None]:
         """
-        Perform raycasting over the entire loaded stage. 
+        Perform raycasting over the entire loaded stage.
 
         Interface is the same as the normal raycast_mesh function without the option to provide specific meshes.
         """
 
         hits = [
-            get_physx_scene_query_interface().raycast_closest(
-                carb.Float3(ray_single), carb.Float3(ray_dir), max_dist
-            )
+            get_physx_scene_query_interface().raycast_closest(carb.Float3(ray_single), carb.Float3(ray_dir), max_dist)
             for ray_single, ray_dir in zip(ray_starts.cpu().numpy(), ray_directions.cpu().numpy())
         ]
 
-        # get all hit idx 
+        # get all hit idx
         hit_idx = [idx for idx, single_hit in enumerate(hits) if single_hit["hit"]]
 
         # hit positions
-        hit_positions = torch.zeros_like(ray_starts).fill_(float('inf'))
-        hit_positions[hit_idx] = torch.tensor([single_hit['position'] for single_hit in hits if single_hit["hit"]])
+        hit_positions = torch.zeros_like(ray_starts).fill_(float("inf"))
+        hit_positions[hit_idx] = torch.tensor([single_hit["position"] for single_hit in hits if single_hit["hit"]])
 
         # get distance
         if return_distance:
-            ray_distance = torch.zeros(ray_starts.shape[0]).fill_(float('inf'))
+            ray_distance = torch.zeros(ray_starts.shape[0]).fill_(float("inf"))
             ray_distance[hit_idx] = torch.tensor([single_hit["distance"] for single_hit in hits if single_hit["hit"]])
         else:
             ray_distance = None
-        
+
         # get normal
         if return_normal:
-            ray_normal = torch.zeros_like(ray_starts).fill_(float('inf'))
-            ray_normal[hit_idx] = torch.tensor([single_hit['normal'] for single_hit in hits if single_hit["hit"]])
+            ray_normal = torch.zeros_like(ray_starts).fill_(float("inf"))
+            ray_normal[hit_idx] = torch.tensor([single_hit["normal"] for single_hit in hits if single_hit["hit"]])
         else:
             ray_normal = None
 
         # get class
         if return_class:
-            ray_class = [get_semantics(prims_utils.get_prim_at_path(single_hit["collision"]))["Semantics"][1] if single_hit["hit"] else None for single_hit in hits]
+            ray_class = [
+                (
+                    get_semantics(prims_utils.get_prim_at_path(single_hit["collision"]))["Semantics"][1]
+                    if single_hit["hit"]
+                    else None
+                )
+                for single_hit in hits
+            ]
         else:
             ray_class = None
 

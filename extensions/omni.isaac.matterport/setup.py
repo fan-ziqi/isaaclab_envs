@@ -24,7 +24,9 @@ setup(
     author="Pascal Roth",
     author_email="rothpa@ethz.ch",
     version="0.0.1",
-    description="Extension to include Matterport 3D Datasets into Isaac (taken from https://niessner.github.io/Matterport/).",
+    description=(
+        "Extension to include Matterport 3D Datasets into Isaac (taken from https://niessner.github.io/Matterport/)."
+    ),
     keywords=["robotics"],
     include_package_data=True,
     python_requires=">=3.7",

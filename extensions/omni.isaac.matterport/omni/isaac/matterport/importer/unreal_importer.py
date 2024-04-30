@@ -1,21 +1,26 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 from __future__ import annotations
 
 import os
 from typing import TYPE_CHECKING
 
 import carb
-import numpy as np
 import omni
 import omni.isaac.core.utils.prims as prim_utils
-import omni.isaac.orbit.sim as sim_utils
 import yaml
 from omni.isaac.core.utils.semantics import add_update_semantics, remove_all_semantics
+from omni.isaac.matterport.utils.prims import (
+    get_all_prims_including_str,
+    get_mesh_prims,
+)
 from omni.isaac.orbit.terrains import TerrainImporter
 from omni.isaac.orbit.utils.assets import ISAAC_NUCLEUS_DIR
-from omni.isaac.orbit.utils.warp import convert_to_warp_mesh
 from pxr import Gf, UsdGeom
-
-from omni.isaac.matterport.utils.prims import get_mesh_prims, get_all_prims_including_str
 
 if TYPE_CHECKING:
     from .unreal_importer_cfg import UnRealImporterCfg
@@ -49,62 +54,6 @@ class UnRealImporter(TerrainImporter):
         # assign semantic labels
         if self.cfg.sem_mesh_to_class_map:
             self._add_semantics()
-
-    """
-    Import Functions
-    """
-
-    # def import_usd(self, key: str, usd_path: str):
-    #     """Import a mesh from a USD file.
-
-    #     USD file can contain arbitrary many meshes.
-
-    #     Note:
-    #         We do not apply any material properties to the mesh. The material properties should
-    #         be defined in the USD file.
-
-    #     Args:
-    #         key: The key to store the mesh.
-    #         usd_path: The path to the USD file.
-
-    #     Raises:
-    #         ValueError: If a terrain with the same key already exists.
-    #     """
-    #     # add mesh to the dict
-    #     if key in self.meshes:
-    #         raise ValueError(f"Mesh with key {key} already exists. Existing keys: {self.meshes.keys()}.")
-    #     # add the prim path
-    #     cfg = sim_utils.UsdFileCfg(usd_path=usd_path)
-
-    #     if self.cfg.axis_up == "Y" or self.cfg.axis_up == "y":
-    #         cfg.func(self.cfg.prim_path + f"/{key}", cfg)   # , orientation=(0.2759, 0.4469, 0.4469, 0.7240))
-    #     else:
-    #         cfg.func(self.cfg.prim_path + f"/{key}", cfg)
-
-    #     # assign each submesh it's own geometry prim --> important for raytracing to be able to identify the submesh
-    #     submeshes = get_mesh_prims(self.cfg.prim_path + f"/{key}")
-
-    #     for submesh, submesh_name in zip(submeshes[0], submeshes[1]):
-    #         # cast into UsdGeomMesh
-    #         mesh_prim = UsdGeom.Mesh(submesh)
-    #         # store the mesh
-    #         vertices = np.asarray(mesh_prim.GetPointsAttr().Get())
-    #         faces = np.asarray(mesh_prim.GetFaceVertexIndicesAttr().Get())
-    #         # check if both faces and vertices are valid
-    #         if not vertices or not faces:
-    #             carb.log_warn(f"Mesh {submesh_name} has no faces or vertices.")
-    #             continue
-    #         faces = faces.reshape(-1, 3)
-    #         self.meshes[submesh_name] = trimesh.Trimesh(vertices=vertices, faces=faces)
-    #         # create a warp mesh
-    #         device = "cuda" if "cuda" in self.device else "cpu"
-    #         self.warp_meshes[submesh_name] = convert_to_warp_mesh(vertices, faces, device=device)
-
-    #     # add colliders and physics material
-    #     if self.cfg.groundplane:
-    #         ground_plane_cfg = sim_utils.GroundPlaneCfg(physics_material=self.cfg.physics_material)
-    #         ground_plane = ground_plane_cfg.func("/World/GroundPlane", ground_plane_cfg)
-    #         ground_plane.visible = False
 
     """ Assign Semantic Labels """
 
@@ -173,9 +122,10 @@ class UnRealImporter(TerrainImporter):
 
         missing = [i for x, y in zip(mesh_list, mesh_list[1:]) for i in range(x + 1, y) if y - x > 1]
         assert len(mesh_list) > 0, "No mesh is assigned a semantic class!"
-        assert len(mesh_list) == len(
-            mesh_prims_name
-        ), f"Not all meshes are assigned a semantic class! Following mesh names are included yet: {[mesh_prims_name[miss_idx] for miss_idx in missing]}"
+        assert len(mesh_list) == len(mesh_prims_name), (
+            "Not all meshes are assigned a semantic class! Following mesh names are included yet:"
+            f" {[mesh_prims_name[miss_idx] for miss_idx in missing]}"
+        )
         carb.log_info("Semantic mapping done.")
 
         return
@@ -205,19 +155,21 @@ class UnRealImporter(TerrainImporter):
             if value.get("only_first_match", True):
                 prims = [prims[0]]
 
-            # make translations a list of lists in the case only a single translation is given     
+            # make translations a list of lists in the case only a single translation is given
             if not isinstance(value["translation"][0], list):
                 value["translation"] = [value["translation"]]
 
-            # iterate over translations and their factor           
+            # iterate over translations and their factor
             for translation_idx, curr_translation in enumerate(value["translation"]):
                 for copy_idx in range(value.get("factor", 1)):
                     for curr_prim in prims:
                         # get the path of the current prim
                         curr_prim_path = curr_prim.GetPath().pathString
                         # copy path
-                        new_prim_path = os.path.join(curr_prim_path + f"_tr{translation_idx}_cp{copy_idx}" + value.get("suffix", ""))
-                        
+                        new_prim_path = os.path.join(
+                            curr_prim_path + f"_tr{translation_idx}_cp{copy_idx}" + value.get("suffix", "")
+                        )
+
                         success = omni.usd.duplicate_prim(
                             stage=stage,
                             prim_path=curr_prim_path,
@@ -250,7 +202,7 @@ class UnRealImporter(TerrainImporter):
                 scale_people=person_cfg.get("scale", 1.0),
                 usd_path=person_cfg.get("usd_path", "People/Characters/F_Business_02/F_Business_02.usd"),
             )
-            # TODO: alow for movement of the people
+            # TODO: allow for movement of the people
 
         print(f"Number of people added: {len(people_cfg)}")
 

@@ -56,7 +56,8 @@ def main():
     samples = explorer.sample_viewpoints(1879)
     explorer.render_viewpoints(samples)
     print(
-        "[INFO]: Viewpoints sampled and rendered will continue to render the environment and visualize the last camera positions..."
+        "[INFO]: Viewpoints sampled and rendered will continue to render the environment and visualize the last camera"
+        " positions..."
     )
 
     # Define simulation stepping

@@ -18,8 +18,8 @@ import torch
 from omni.isaac.orbit.markers import VisualizationMarkers
 from omni.isaac.orbit.markers.config import GREEN_ARROW_X_MARKER_CFG
 from omni.isaac.orbit.scene import InteractiveScene
-from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.sensors import Camera
+from omni.isaac.orbit.sim import SimulationContext
 
 from .terrain_analysis import TerrainAnalysis
 from .viewpoint_sampling_cfg import ViewpointSamplingCfg
@@ -78,9 +78,9 @@ class ViewpointSampling:
             # get samples
             sample_idx = self.terrain_analyser.samples[:, 0] == curr_env_idx
             sample_idx_select = torch.randperm(sample_idx.sum())[:nbr_samples_per_point]
-            sample_locations[
-                sample_locations_count : sample_locations_count + sample_idx_select.shape[0]
-            ] = self.terrain_analyser.samples[sample_idx][sample_idx_select, :2]
+            sample_locations[sample_locations_count : sample_locations_count + sample_idx_select.shape[0]] = (
+                self.terrain_analyser.samples[sample_idx][sample_idx_select, :2]
+            )
             sample_locations_count += sample_idx_select.shape[0]
             curr_env_idx += 1
 
@@ -168,7 +168,7 @@ class ViewpointSampling:
                 )
             # update simulation
             self.scene.write_data_to_sim()
-            # perfrom render steps to fill buffers if usd cameras are used
+            # perform render steps to fill buffers if usd cameras are used
             if any([isinstance(self.scene.sensors[cam], Camera) for cam in self.cfg.cameras.keys()]):
                 for _ in range(10):
                     self.sim.render()

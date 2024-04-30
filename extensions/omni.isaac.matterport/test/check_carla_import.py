@@ -28,15 +28,15 @@ simulation_app = app_launcher.app
 """Rest everything follows."""
 
 import os
+
 import omni.isaac.orbit.sim as sim_utils
+from omni.isaac.matterport.domains import DATA_DIR
+from omni.isaac.matterport.importer import UnRealImporterCfg
 from omni.isaac.orbit.assets import ArticulationCfg, AssetBaseCfg
 from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
 from omni.isaac.orbit.sensors import CameraCfg
 from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils import configclass
-
-from omni.isaac.matterport.importer import UnRealImporterCfg
-from omni.isaac.matterport.domains import DATA_DIR
 
 ##
 # Pre-defined configs
@@ -63,7 +63,10 @@ class TestTerrainCfg(InteractiveSceneCfg):
         ),
         usd_path="/home/pascal/viplanner/env/carla_exp/carla.usd",
         groundplane=True,
-        duplicate_cfg_file=[os.path.join(DATA_DIR, "unreal", "town01", "cw_multiply_cfg.yml"), os.path.join(DATA_DIR, "unreal", "town01", "vehicle_cfg.yml")],
+        duplicate_cfg_file=[
+            os.path.join(DATA_DIR, "unreal", "town01", "cw_multiply_cfg.yml"),
+            os.path.join(DATA_DIR, "unreal", "town01", "vehicle_cfg.yml"),
+        ],
         sem_mesh_to_class_map=os.path.join(DATA_DIR, "unreal", "town01", "keyword_mapping.yml"),
         people_config_file=os.path.join(DATA_DIR, "unreal", "town01", "people_cfg.yml"),
         axis_up="Y",
@@ -76,9 +79,7 @@ class TestTerrainCfg(InteractiveSceneCfg):
         update_period=0,
         data_types=["semantic_segmentation"],
         debug_vis=True,
-        offset=CameraCfg.OffsetCfg(
-            pos=(0.419, -0.025, -0.020), rot=(0.992, 0.008, 0.127, 0.001), convention="world"
-        ),
+        offset=CameraCfg.OffsetCfg(pos=(0.419, -0.025, -0.020), rot=(0.992, 0.008, 0.127, 0.001), convention="world"),
         height=720,
         width=1280,
         spawn=sim_utils.PinholeCameraCfg(
@@ -91,9 +92,7 @@ class TestTerrainCfg(InteractiveSceneCfg):
         update_period=0,
         data_types=["distance_to_image_plane"],
         debug_vis=False,
-        offset=CameraCfg.OffsetCfg(
-            pos=(0.419, -0.025, -0.020), rot=(0.992, 0.008, 0.127, 0.001), convention="world"
-        ),
+        offset=CameraCfg.OffsetCfg(pos=(0.419, -0.025, -0.020), rot=(0.992, 0.008, 0.127, 0.001), convention="world"),
         height=480,
         width=848,
         spawn=sim_utils.PinholeCameraCfg(

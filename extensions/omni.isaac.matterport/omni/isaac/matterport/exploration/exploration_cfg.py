@@ -4,9 +4,6 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import os
-from typing import Optional, Tuple
-
 import omni.isaac.orbit.sim as sim_utils
 import torch
 from omni.isaac.matterport.domains import MatterportRayCasterCameraCfg
@@ -16,7 +13,7 @@ from omni.isaac.orbit.scene import InteractiveSceneCfg
 from omni.isaac.orbit.sensors import patterns
 from omni.isaac.orbit.utils import configclass
 
-from .terrain_analysis import TerrainAnalysisCfg
+from .terrain_analysis_cfg import TerrainAnalysisCfg
 
 OBJ_PATH = "/home/pascal/orbit/orbit/source/extensions/omni.isaac.orbit_assets/data/matterport/2n8kARJN3HM/2n8kARJN3HM/matterport_mesh/0c334eaabb844eaaad049cbbb2e0a4f2/0c334eaabb844eaaad049cbbb2e0a4f2.usd"
 PLY_PATH = "/home/pascal/orbit/orbit/source/extensions/omni.isaac.orbit_assets/data/matterport/2n8kARJN3HM/2n8kARJN3HM/house_segmentations/2n8kARJN3HM.ply"
@@ -125,8 +122,8 @@ class ExplorationCfg:
     # sampling
     sample_points: int = 10000
     """Number of random points to sample."""
-    x_angle_range: Tuple[float, float] = (-2.5, 2.5)
-    y_angle_range: Tuple[float, float] = (-2, 5)  # negative angle means in isaac convention: look down
+    x_angle_range: tuple[float, float] = (-2.5, 2.5)
+    y_angle_range: tuple[float, float] = (-2, 5)  # negative angle means in isaac convention: look down
     """Range of the x and y angle of the camera (in degrees), will be randomly selected according to a uniform distribution"""
     height: float = 0.5
     """Height to use for the random points."""
@@ -156,5 +153,5 @@ class ExplorationCfg:
     max_images: int = 2000
     """Maximum number of images recorded"""
     save_path: str = "/home/pascal/viplanner/imperative_learning/data"
-    suffix: Optional[str] = "cam_mount"
+    suffix: str | None = "cam_mount"
     """Path to save the data to (directly with env name will be created)"""

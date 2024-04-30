@@ -83,17 +83,15 @@ def sem_color_transfer(sem_image: np.ndarray, sem_idToLabels: dict) -> np.ndarra
             sem_idToLabels[k] = {"class": "static"}
 
     # color mapping
-    sem_idToColor = np.array(
+    sem_idToColor = np.array([
         [
-            [
-                int(k),
-                viplanner_sem_meta.class_color[v["class"]][0],
-                viplanner_sem_meta.class_color[v["class"]][1],
-                viplanner_sem_meta.class_color[v["class"]][2],
-            ]
-            for k, v in sem_idToLabels.items()
+            int(k),
+            viplanner_sem_meta.class_color[v["class"]][0],
+            viplanner_sem_meta.class_color[v["class"]][1],
+            viplanner_sem_meta.class_color[v["class"]][2],
         ]
-    )
+        for k, v in sem_idToLabels.items()
+    ])
 
     # order colors by their id and necessary to account for missing indices (not guaranteed to be consecutive)
     sem_idToColorMap = np.zeros((max(sem_idToColor[:, 0]) + 1, 3), dtype=np.uint8)
@@ -229,7 +227,7 @@ if __name__ == "__main__":
     # show trajectories
     show_trajectories = False
     scale_waypoints = False
-    repeated_trajectories: Optional[int] = 5
+    repeated_trajectories: int | None = 5
     if show_trajectories:
         model_viplanner = "/home/pascal/viplanner/imperative_learning/models/plannernet_env2azQ1b91cZZ_cam_mount_ep100_inputDepSem_costSem_optimSGD_new_cam_mount_combi_lossWidthMod_wgoal4.0_warehouse/eval_Town01_Opt_paper"
         model_iplanner = (
@@ -237,7 +235,9 @@ if __name__ == "__main__":
         )
         path_files = [file for file in os.listdir(model_viplanner + "/repeat_0") if file.startswith("waypoint")]
         path_files.sort()
-        waypoint_file = "/home/pascal/viplanner/imperative_learning/data/waypoints/crosswalk_paper_changed.json"  # crosswalk_paper_extended_5.json
+        waypoint_file = (  # crosswalk_paper_extended_5.json
+            "/home/pascal/viplanner/imperative_learning/data/waypoints/crosswalk_paper_changed.json"
+        )
 
         # Acquire draw interface
         draw_interface = omni_debug_draw.acquire_debug_draw_interface()
@@ -333,19 +333,17 @@ if __name__ == "__main__":
 
         # draw circle around waypoints
         cfg_vip = VIPlannerCfg()
-        circ_coord = np.array(
-            [
-                [cfg_vip.conv_dist, 0, 0],
-                [0, cfg_vip.conv_dist, 0],
-                [-cfg_vip.conv_dist, 0, 0],
-                [0, -cfg_vip.conv_dist, 0],
-                [cfg_vip.conv_dist, 0, 0],
-                [0, cfg_vip.conv_dist, 0],
-                [-cfg_vip.conv_dist, 0, 0],
-                [0, -cfg_vip.conv_dist, 0],
-                [cfg_vip.conv_dist, 0, 0],
-            ]
-        )
+        circ_coord = np.array([
+            [cfg_vip.conv_dist, 0, 0],
+            [0, cfg_vip.conv_dist, 0],
+            [-cfg_vip.conv_dist, 0, 0],
+            [0, -cfg_vip.conv_dist, 0],
+            [cfg_vip.conv_dist, 0, 0],
+            [0, cfg_vip.conv_dist, 0],
+            [-cfg_vip.conv_dist, 0, 0],
+            [0, -cfg_vip.conv_dist, 0],
+            [cfg_vip.conv_dist, 0, 0],
+        ])
         for waypoint in waypoints["waypoints"]:
             if scale_waypoints:
                 waypoint = (np.array(waypoint) * cfg_loader.scale).tolist()

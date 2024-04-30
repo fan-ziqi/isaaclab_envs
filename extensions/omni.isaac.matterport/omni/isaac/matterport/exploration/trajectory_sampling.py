@@ -86,8 +86,18 @@ class TrajectorySampling:
             # select the samples
             selected_samples = self.terrain_analyser.samples[rand_idx[within_length]][:num_path]
 
+            # filter edge cases
+            if selected_samples.shape[0] == 0:
+                print(f"[WARNING] No paths found with length [{min_len},{max_len}]")
+                continue
+            elif selected_samples.shape[0] < num_path:
+                print(
+                    f"[WARNING] Only {selected_samples.shape[0]} paths found with length [{min_len},{max_len}] instead"
+                    f" of {num_path}"
+                )
+
             # get start, goal and path length
-            curr_data = torch.zeros((num_path, 7))
+            curr_data = torch.zeros((selected_samples.shape[0], 7))
             curr_data[:, :3] = self.terrain_analyser.points[selected_samples[:, 0].type(torch.int64)]
             curr_data[:, 3:6] = self.terrain_analyser.points[selected_samples[:, 1].type(torch.int64)]
             curr_data[:, 6] = selected_samples[:, 2]

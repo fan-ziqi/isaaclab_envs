@@ -29,8 +29,11 @@ class TerrainAnalysisCfg:
     """Number of connections to make in the graph"""
     raycaster_sensor: str | None = None
     """Name of the raycaster sensor to use for terrain analysis.
-    
-    If None, the terrain analysis will be done on the USD stage. Default is None."""
+
+    If None, the terrain analysis will be done on the USD stage. For matterport environments,
+    the Orbit raycaster sensor can be used as the ply mesh is a single mesh. On the contrary,
+    for unreal engine meshes (as they consists out of multiple meshes), raycasting should be
+    performed over the USD stage. Default is None."""
     grid_resolution: float = 0.1
     """Resolution of the grid to check for not traversable edges"""
     height_diff_threshold: float = 0.3
@@ -45,6 +48,6 @@ class TerrainAnalysisCfg:
 
     dim_limiter_prim: str | None = None
     """Prim name that should be used to limit the dimensions of the mesh.
-     
-    All meshes including this prim string are used to set the range in which the graph is constructed and samples are 
+
+    All meshes including this prim string are used to set the range in which the graph is constructed and samples are
     generated. If None, all meshes are considered."""
