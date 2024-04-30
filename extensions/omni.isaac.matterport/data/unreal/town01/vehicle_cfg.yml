@@ -3,7 +3,7 @@
 
 # each entry has the following format:
 # name:
-#   prim_part:    [str]                         part of the prim of the vehicle that should be multiplied (every prim containing this string will be multiplied)
+#   prim:    [str]                         part of the prim of the vehicle that should be multiplied (every prim containing this string will be multiplied)
 #   translation:  [[float, float, float]]       list of translations of the vehicle
 
 # NOTE: rotations and scales applied to the mesh are not applied to the translations given here, i.e. they have to be
@@ -12,10 +12,8 @@
 # NOTE: for Town01, take "ChevroletImpala_High_V4" for vehicles along the x axis and "JeepWranglerRubicon_36"
 #       for vehicles along the y axis
 
-town_prim: "Town01_Opt"
-
 vehicle_1:
-  prim_part: "ChevroletImpala_High_V4"
+  prim: "ChevroletImpala_High_V4"
   translation:
     - [-15300, 0, -4000]
     - [-15300, 0, 0]
@@ -28,9 +26,10 @@ vehicle_1:
     - [9000, 0, 6000]
     - [9000, 0, 500]
     - [9000, 0, -4000]
+  only_first_match: false
 
 vehicle_2:
-  prim_part: "JeepWranglerRubicon_36"
+  prim: "JeepWranglerRubicon_36"
   translation:
     - [0, 0, -1500]
     - [3500, 0, -1500]
@@ -65,5 +64,4 @@ vehicle_2:
     - [16400, 0, 30800]
     - [21000, 0, 31300]
     - [25000, 0, 31300]
-
-# EoF
+  only_first_match: false

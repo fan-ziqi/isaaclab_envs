@@ -31,7 +31,7 @@ import omni.kit.asset_converter as converter
 
 
 class MatterportConverter:
-    def __init__(self, input_obj: str, context: converter.impl.AssetConverterContext) -> None:
+    def __init__(self, input_obj: str, context: converter.impl.AssetConverterContext):
         self._input_obj = input_obj
         self._context = context
 
@@ -39,7 +39,7 @@ class MatterportConverter:
         self.task_manager = converter.extension.AssetImporterExtension()
         return
 
-    async def convert_asset_to_usd(self) -> None:
+    async def convert_asset_to_usd(self):
         # get usd file path and create directory
         base_path, _ = os.path.splitext(self._input_obj)
         # set task
@@ -66,7 +66,7 @@ class MatterportImporter(TerrainImporter):
 
     cfg: MatterportImporterCfg
 
-    def __init__(self, cfg: MatterportImporterCfg) -> None:
+    def __init__(self, cfg: MatterportImporterCfg):
         """
         :param
         """
@@ -101,7 +101,7 @@ class MatterportImporter(TerrainImporter):
         # Converter
         self.converter: MatterportConverter = MatterportConverter(self.cfg.obj_filepath, self.cfg.asset_converter)
 
-    async def load_world_async(self) -> None:
+    async def load_world_async(self):
         """Function called when clicking load button"""
         # create world
         await self.load_matterport()
@@ -110,7 +110,7 @@ class MatterportImporter(TerrainImporter):
         # Now we are ready!
         carb.log_info("[INFO]: Setup complete...")
 
-    def load_world(self) -> None:
+    def load_world(self):
         """Function called when clicking load button"""
         # create world
         self.load_matterport_sync()
@@ -119,7 +119,7 @@ class MatterportImporter(TerrainImporter):
         # Now we are ready!
         carb.log_info("[INFO]: Setup complete...")
 
-    async def load_matterport(self) -> None:
+    async def load_matterport(self):
         _, ext = os.path.splitext(self.cfg.obj_filepath)
         # if obj mesh --> convert to usd
         if ext == ".obj":
@@ -127,7 +127,7 @@ class MatterportImporter(TerrainImporter):
         # add mesh to stage
         self.load_matterport_sync()
 
-    def load_matterport_sync(self) -> None:
+    def load_matterport_sync(self):
         base_path, _ = os.path.splitext(self.cfg.obj_filepath)
         assert os.path.exists(base_path + ".usd"), (
             "Matterport load sync can only handle '.usd' files not obj files. "

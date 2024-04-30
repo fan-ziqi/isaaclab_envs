@@ -19,6 +19,7 @@ from omni.isaac.orbit.markers import VisualizationMarkers
 from omni.isaac.orbit.markers.config import GREEN_ARROW_X_MARKER_CFG
 from omni.isaac.orbit.scene import InteractiveScene
 from omni.isaac.orbit.sim import SimulationContext
+from omni.isaac.orbit.sensors import Camera
 
 from .terrain_analysis import TerrainAnalysis
 from .viewpoint_sampling_cfg import ViewpointSamplingCfg
@@ -167,6 +168,11 @@ class ViewpointSampling:
                 )
             # update simulation
             self.scene.write_data_to_sim()
+            # perfrom render steps to fill buffers if usd cameras are used
+            if any([isinstance(self.scene.sensors[cam], Camera) for cam in self.cfg.cameras.keys()]):
+                for _ in range(10):
+                    self.sim.render()
+            # update scene buffers
             self.scene.update(self.sim.get_physics_dt())
             # render
             start_time = time.time()
@@ -180,7 +186,7 @@ class ViewpointSampling:
                 # save images
                 for idx in range(samples_idx.shape[0]):
                     # semantic segmentation
-                    if image_data_np.shape[-1] == 3:
+                    if image_data_np.shape[-1] == 3 or image_data_np.shape[-1] == 4:
                         assert cv2.imwrite(
                             os.path.join(filedir, cam, annotator, f"{image_idx}".zfill(4) + ".png"),
                             cv2.cvtColor(image_data_np[idx].astype(np.uint8), cv2.COLOR_RGB2BGR),
@@ -195,7 +201,7 @@ class ViewpointSampling:
                     image_idx += 1
 
                     if image_idx % 100 == 0:
-                        print(f"[INFO] Rendered {image_idx} images in {time.time() - start_time:.4f}s.")
+                        print(f"[INFO] Rendered {image_idx} images in {(time.time() - start_time):.4f}s.")
 
     ###
     # Safe paths
