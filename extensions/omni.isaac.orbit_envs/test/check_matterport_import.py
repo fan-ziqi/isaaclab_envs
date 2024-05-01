@@ -28,11 +28,11 @@ simulation_app = app_launcher.app
 """Rest everything follows."""
 
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.matterport.domains import (
+from omni.isaac.orbit_envs.domains import (
     MatterportRayCasterCameraCfg,
     MatterportRayCasterCfg,
 )
-from omni.isaac.matterport.importer import MatterportImporterCfg
+from omni.isaac.orbit_envs.importer import MatterportImporterCfg
 from omni.isaac.orbit.assets import ArticulationCfg, AssetBaseCfg
 from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
 from omni.isaac.orbit.sensors import patterns

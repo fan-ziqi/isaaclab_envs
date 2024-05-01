@@ -17,7 +17,7 @@ import torch
 import trimesh
 import warp as wp
 from omni.isaac.core.prims import XFormPrimView
-from omni.isaac.matterport.domains import DATA_DIR
+from omni.isaac.orbit_envs.domains import DATA_DIR
 from omni.isaac.orbit.sensors.ray_caster import RayCaster
 from omni.isaac.orbit.utils.math import convert_quat, quat_apply, quat_apply_yaw
 from omni.isaac.orbit.utils.warp import raycast_mesh
@@ -66,9 +66,9 @@ class MatterportRayCaster(RayCaster):
 
         # load categort id to class mapping (name and id of mpcat40 redcued class set)
         # More Information: https://github.com/niessner/Matterport/blob/master/data_organization.md#house_segmentations
-        mapping = pd.read_csv(DATA_DIR + "/mappings/category_mapping.tsv", sep="\t")
+        mapping = pd.read_csv(DATA_DIR + "/matterport/category_mapping.tsv", sep="\t")
         self.mapping_mpcat40 = torch.tensor(mapping["mpcat40index"].to_numpy(), device=self._device, dtype=torch.long)
-        self.classes_mpcat40 = pd.read_csv(DATA_DIR + "/mappings/mpcat40.tsv", sep="\t")["mpcat40"].to_numpy()
+        self.classes_mpcat40 = pd.read_csv(DATA_DIR + "/matterport/mpcat40.tsv", sep="\t")["mpcat40"].to_numpy()
 
     def _initialize_warp_meshes(self):
         # check if mesh is already loaded

@@ -16,7 +16,7 @@ readme  = "docs/README.md"
 
 # Main python module this extension provides.
 [[python.module]]
-name = "omni.isaac.matterport"
+name = "omni.isaac.orbit_envs"
 
 [[python.module]]
-name = "omni.isaac.matterport.scripts"
+name = "omni.isaac.orbit_envs.scripts"

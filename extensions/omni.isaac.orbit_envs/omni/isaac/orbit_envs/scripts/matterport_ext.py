@@ -18,14 +18,14 @@ import omni.ext
 import omni.isaac.core.utils.stage as stage_utils
 import omni.isaac.orbit.sim as sim_utils
 import omni.ui as ui
-from omni.isaac.matterport.domains import MatterportRayCasterCameraCfg
-from omni.isaac.matterport.exploration import (
+from omni.isaac.orbit_envs.domains import MatterportRayCasterCameraCfg
+from omni.isaac.orbit_envs.exploration import (
     TrajectorySampling,
     TrajectorySamplingCfg,
     ViewpointSampling,
     ViewpointSamplingCfg,
 )
-from omni.isaac.matterport.importer import MatterportImporterCfg, UnRealImporterCfg
+from omni.isaac.orbit_envs.importer import MatterportImporterCfg, UnRealImporterCfg
 from omni.isaac.orbit.assets import AssetBaseCfg, RigidObjectCfg
 from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
 from omni.isaac.orbit.sensors import CameraCfg, RayCasterCameraCfg, patterns
@@ -426,7 +426,7 @@ class MatterPortExtension(omni.ext.IExt):
 
                 self._input_fields["traj_sampling_module_name"] = str_builder(
                     label="Trajectory Module Name",
-                    default_val="omni.isaac.matterport.exploration",
+                    default_val="omni.isaac.orbit_envs.exploration",
                     tooltip="Module name of the Trajectory Sampling Cfg class",
                 )
                 self._input_fields["traj_sampling_class_name"] = str_builder(
@@ -455,7 +455,7 @@ class MatterPortExtension(omni.ext.IExt):
 
                 self._input_fields["viewpoint_sampling_module_name"] = str_builder(
                     label="Viewpoint Module Name",
-                    default_val="omni.isaac.matterport.exploration",
+                    default_val="omni.isaac.orbit_envs.exploration",
                     tooltip="Module name of the Viewpoint Sampling Cfg class",
                 )
                 self._input_fields["viewpoint_sampling_class_name"] = str_builder(
@@ -496,7 +496,7 @@ class MatterPortExtension(omni.ext.IExt):
 
         - "env_id"
             - matterport_mesh
-                - "id_nbr"from omni.isaac.matterport.exploration import ViewpointSampling, ViewpointSamplingCfg
+                - "id_nbr"from omni.isaac.orbit_envs.exploration import ViewpointSampling, ViewpointSamplingCfg
 
                     - "id_nbr".obj
             - house_segmentations

@@ -14,7 +14,7 @@ import omni
 import omni.isaac.core.utils.prims as prim_utils
 import yaml
 from omni.isaac.core.utils.semantics import add_update_semantics, remove_all_semantics
-from omni.isaac.matterport.utils.prims import (
+from omni.isaac.orbit_envs.utils.prims import (
     get_all_prims_including_str,
     get_mesh_prims,
 )

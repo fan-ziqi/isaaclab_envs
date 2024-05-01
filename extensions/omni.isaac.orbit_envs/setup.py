@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Installation script for the 'omni.isaac.matterport' python package."""
+"""Installation script for the 'omni.isaac.orbit_envs' python package."""
 
 
 from setuptools import setup
@@ -31,7 +31,7 @@ setup(
     include_package_data=True,
     python_requires=">=3.7",
     install_requires=INSTALL_REQUIRES,
-    packages=["omni.isaac.matterport"],
+    packages=["omni.isaac.orbit_envs"],
     classifiers=["Natural Language :: English", "Programming Language :: Python :: 3.7"],
     zip_safe=False,
 )

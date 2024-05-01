@@ -34,7 +34,7 @@ To install the extensions, follow these steps:
 ```
 git clone git@github.com:NVIDIA-Omniverse/orbit.git
 cd orbit/source/extensions
-ln -s {ORBIT_ENVS_PROJECT_DIR}/extensions/omni.isaac.matterport .
+ln -s {ORBIT_ENVS_PROJECT_DIR}/extensions/omni.isaac.orbit_envs .
 ln -s {ORBIT_ENVS_PROJECT_DIR}/extensions/omni.isaac.carla .
 ```
 

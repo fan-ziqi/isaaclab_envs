@@ -17,7 +17,7 @@ import pandas as pd
 import torch
 import trimesh
 import warp as wp
-from omni.isaac.matterport.domains import DATA_DIR
+from omni.isaac.orbit_envs.domains import DATA_DIR
 from omni.isaac.orbit.sensors import RayCasterCamera, RayCasterCameraCfg
 from omni.isaac.orbit.utils.warp import raycast_mesh
 from tensordict import TensorDict
@@ -60,14 +60,14 @@ class MatterportRayCasterCamera(RayCasterCamera):
 
         # load categort id to class mapping (name and id of mpcat40 redcued class set)
         # More Information: https://github.com/niessner/Matterport/blob/master/data_organization.md#house_segmentations
-        mapping = pd.read_csv(DATA_DIR + "/mappings/category_mapping.tsv", sep="\t")
+        mapping = pd.read_csv(DATA_DIR + "/matterport/category_mapping.tsv", sep="\t")
         self.mapping_mpcat40 = torch.tensor(mapping["mpcat40index"].to_numpy(), device=self._device, dtype=torch.long)
-        self.classes_mpcat40 = pd.read_csv(DATA_DIR + "/mappings/mpcat40.tsv", sep="\t")["mpcat40"].to_numpy()
+        self.classes_mpcat40 = pd.read_csv(DATA_DIR + "/matterport/mpcat40.tsv", sep="\t")["mpcat40"].to_numpy()
         self._color_mapping()
 
     def _color_mapping(self):
         # load defined colors for mpcat40
-        mapping_40 = pd.read_csv(DATA_DIR + "/mappings/mpcat40.tsv", sep="\t")
+        mapping_40 = pd.read_csv(DATA_DIR + "/matterport/mpcat40.tsv", sep="\t")
         color = mapping_40["hex"].to_numpy()
         self.color = torch.tensor(
             [(int(color[i][1:3], 16), int(color[i][3:5], 16), int(color[i][5:7], 16)) for i in range(len(color))],

@@ -54,12 +54,12 @@ if args_cli.headless:
     extensions.enable_extension("omni.replicator.core")
     extensions.enable_extension("omni.kit.manipulator.viewport")
 
-from omni.isaac.matterport.config import MatterportConfig, SamplerCfg
-from omni.isaac.matterport.exploration import RandomExplorer
+from omni.isaac.orbit_envs.config import MatterportConfig, SamplerCfg
+from omni.isaac.orbit_envs.exploration import RandomExplorer
 
 # omni-isaac-matterport
-from omni.isaac.matterport.semantics import MatterportWarp
-from omni.isaac.matterport.utils import MatterportWorld
+from omni.isaac.orbit_envs.semantics import MatterportWarp
+from omni.isaac.orbit_envs.utils import MatterportWorld
 
 
 def explore(config: MatterportConfig, sample_cfg: SamplerCfg = SamplerCfg()) -> None:

@@ -32,7 +32,7 @@ simulation_app = app_launcher.app
 
 """Rest everything follows."""
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.matterport.exploration import ViewpointSampling, ViewpointSamplingCfg
+from omni.isaac.orbit_envs.exploration import TrajectorySampling, TrajectorySamplingCfg
 from omni.isaac.orbit.sim import SimulationContext
 
 """
@@ -45,27 +45,29 @@ def main():
     # Load kit helper
     sim_cfg = sim_utils.SimulationCfg()
     sim = SimulationContext(sim_cfg)
+    # Set main camera
+    sim.set_camera_view([10.0, 1.5, 2.0], [8.0, -1.0, 0.5])
 
-    cfg = ViewpointSamplingCfg()
-    cfg.exploration_scene.num_envs = args_cli.num_envs  # set number of environments
-    explorer = ViewpointSampling(cfg)
+    cfg = TrajectorySamplingCfg()
+    cfg.terrain_analysis.viz_graph = True
+    explorer = TrajectorySampling(cfg)
     # Now we are ready!
     print("[INFO]: Setup complete...")
 
-    # sample and render viewpoints
-    samples = explorer.sample_viewpoints(1879)
-    explorer.render_viewpoints(samples)
-    print(
-        "[INFO]: Viewpoints sampled and rendered will continue to render the environment and visualize the last camera"
-        " positions..."
-    )
+    # sample viewpoints
+    samples = explorer.sample_paths([1000], [0.0], [10.0])
 
     # Define simulation stepping
     sim_dt = sim.get_physics_dt()
+    # get default cube positions
+    default_cube_pose = explorer.scene.rigid_objects["cube"].data.default_root_state
     # Simulation loop
     while simulation_app.is_running():
+        # set cube position
+        explorer.scene.rigid_objects["cube"].write_root_state_to_sim(default_cube_pose)
+        explorer.scene.write_data_to_sim()
         # Perform step
-        sim.render()
+        sim.step()
         # Update buffers
         explorer.scene.update(sim_dt)
 

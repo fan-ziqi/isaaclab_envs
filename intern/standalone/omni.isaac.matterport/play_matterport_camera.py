@@ -41,8 +41,8 @@ mpl.use("Qt5Agg")
 
 import omni.isaac.core.utils.prims as prim_utils
 from omni.isaac.core.utils.viewports import set_camera_view
-from omni.isaac.matterport.config import MatterportImporterCfg
-from omni.isaac.matterport.domains.matterport_raycast_camera import (
+from omni.isaac.orbit_envs.config import MatterportImporterCfg
+from omni.isaac.orbit_envs.domains.matterport_raycast_camera import (
     MatterportRayCasterCamera,
 )
 from omni.isaac.orbit.sensors.camera import Camera, CameraCfg

@@ -30,11 +30,11 @@ simulation_app = app_launcher.app
 import os
 
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.matterport.domains import DATA_DIR
-from omni.isaac.matterport.importer import UnRealImporterCfg
+from omni.isaac.orbit_envs.domains import DATA_DIR
+from omni.isaac.orbit_envs.importer import UnRealImporterCfg
 from omni.isaac.orbit.assets import ArticulationCfg, AssetBaseCfg
 from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
-from omni.isaac.orbit.sensors import CameraCfg
+from omni.isaac.orbit.sensors import CameraCfg, patterns
 from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils import configclass
 
@@ -54,22 +54,18 @@ class TestTerrainCfg(InteractiveSceneCfg):
 
     # ground terrain
     terrain = UnRealImporterCfg(
-        prim_path="/World/Carla",
+        prim_path="/World/Warehouse",
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",
             restitution_combine_mode="multiply",
             static_friction=1.0,
             dynamic_friction=1.0,
         ),
-        usd_path="/home/pascal/viplanner/env/carla_exp/carla.usd",
+        usd_path="/home/pascal/viplanner/env/warehouse/warehouse_new.usd",
         groundplane=True,
-        duplicate_cfg_file=[
-            os.path.join(DATA_DIR, "unreal", "town01", "cw_multiply_cfg.yml"),
-            os.path.join(DATA_DIR, "unreal", "town01", "vehicle_cfg.yml"),
-        ],
-        sem_mesh_to_class_map=os.path.join(DATA_DIR, "unreal", "town01", "keyword_mapping.yml"),
-        people_config_file=os.path.join(DATA_DIR, "unreal", "town01", "people_cfg.yml"),
-        axis_up="Y",
+        sem_mesh_to_class_map=os.path.join(DATA_DIR, "nvidia", "warehouse", "keyword_mapping.yml"),
+        people_config_file=os.path.join(DATA_DIR, "nvidia", "warehouse", "people_cfg.yml"),
+        axis_up="Z",
     )
     # articulation
     robot: ArticulationCfg = ANYMAL_C_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")

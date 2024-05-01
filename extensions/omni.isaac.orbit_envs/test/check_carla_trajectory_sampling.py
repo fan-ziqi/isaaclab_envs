@@ -34,10 +34,10 @@ simulation_app = app_launcher.app
 import os
 
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.matterport.domains import DATA_DIR
-from omni.isaac.matterport.exploration import ViewpointSampling, ViewpointSamplingCfg
-from omni.isaac.matterport.exploration.carla_class_cost import CarlaSemanticCostMapping
-from omni.isaac.matterport.importer import UnRealImporterCfg
+from omni.isaac.orbit_envs.domains import DATA_DIR
+from omni.isaac.orbit_envs.exploration import TrajectorySampling, TrajectorySamplingCfg
+from omni.isaac.orbit_envs.exploration.carla_class_cost import CarlaSemanticCostMapping
+from omni.isaac.orbit_envs.importer import UnRealImporterCfg
 from omni.isaac.orbit.assets import AssetBaseCfg
 from omni.isaac.orbit.scene import InteractiveSceneCfg
 from omni.isaac.orbit.sensors import CameraCfg
@@ -112,39 +112,30 @@ def main():
     # Load kit helper
     sim_cfg = sim_utils.SimulationCfg()
     sim = SimulationContext(sim_cfg)
+    # Set main camera
     sim.set_camera_view([130, -125, 30], [100, -130, 0.5])
 
-    cfg = ViewpointSamplingCfg()
-    # override the scene configuration
-    cfg.exploration_scene = TestTerrainCfg(args_cli.num_envs, env_spacing=1.0)
+    cfg = TrajectorySamplingCfg()
     # overwrite semantic cost mapping and adjust parameters based on larger map
     cfg.terrain_analysis.semantic_cost_mapping = CarlaSemanticCostMapping()
     cfg.terrain_analysis.grid_resolution = 1.0
     cfg.terrain_analysis.sample_points = 10000
+    # enable debug visualization
+    cfg.terrain_analysis.viz_graph = True
 
-    # limit space to be within the road network
-    cfg.terrain_analysis.dim_limiter_prim = "Road_Sidewalk"
-
-    explorer = ViewpointSampling(cfg)
+    explorer = TrajectorySampling(cfg)
     # Now we are ready!
     print("[INFO]: Setup complete...")
 
-    # sample and render viewpoints
-    samples = explorer.sample_viewpoints(9560)
-    explorer.render_viewpoints(samples)
-    print(
-        "[INFO]: Viewpoints sampled and rendered will continue to render the environment and visualize the last camera"
-        " positions..."
-    )
+    # sample trajectories
+    samples = explorer.sample_paths([1000, 1000], [0.0, 10.0], [10.0, 20.0])
 
-    # Define simulation stepping
-    sim_dt = sim.get_physics_dt()
+    print("[INFO]: Trajectories sampled and simulation will continue to render the environment...")
+
     # Simulation loop
     while simulation_app.is_running():
         # Perform step
         sim.render()
-        # Update buffers
-        explorer.scene.update(sim_dt)
 
 
 if __name__ == "__main__":
