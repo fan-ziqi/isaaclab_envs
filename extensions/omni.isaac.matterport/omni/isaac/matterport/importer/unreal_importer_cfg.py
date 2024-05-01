@@ -22,7 +22,7 @@ class UnRealImporterCfg(TerrainImporterCfg):
 
     sem_mesh_to_class_map: str | None = None
     """Path to the mesh to semantic class mapping file.
-    
+
     If set, semantic classes will be added to the scene. Default is None."""
 
     duplicate_cfg_file: str | list | None = None

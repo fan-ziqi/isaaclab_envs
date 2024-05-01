@@ -6,18 +6,31 @@
 
 import asyncio
 import gc
-import os
-from typing import Literal
 import importlib
+import os
 from dataclasses import MISSING
+from typing import Literal
 
 import carb
 import omni
 import omni.client
 import omni.ext
 import omni.isaac.core.utils.stage as stage_utils
+import omni.isaac.orbit.sim as sim_utils
 import omni.ui as ui
-
+from omni.isaac.matterport.domains import MatterportRayCasterCameraCfg
+from omni.isaac.matterport.exploration import (
+    TrajectorySampling,
+    TrajectorySamplingCfg,
+    ViewpointSampling,
+    ViewpointSamplingCfg,
+)
+from omni.isaac.matterport.importer import MatterportImporterCfg, UnRealImporterCfg
+from omni.isaac.orbit.assets import AssetBaseCfg, RigidObjectCfg
+from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
+from omni.isaac.orbit.sensors import CameraCfg, RayCasterCameraCfg, patterns
+from omni.isaac.orbit.terrains import TerrainImporterCfg
+from omni.isaac.orbit.utils import configclass
 from omni.isaac.ui.ui_utils import (
     btn_builder,
     cb_builder,
@@ -28,18 +41,6 @@ from omni.isaac.ui.ui_utils import (
     setup_ui_headers,
     str_builder,
 )
-
-import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit.terrains import TerrainImporterCfg
-from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
-from omni.isaac.orbit.utils import configclass
-from omni.isaac.orbit.sensors import CameraCfg, RayCasterCameraCfg, patterns
-from omni.isaac.orbit.assets import RigidObjectCfg, AssetBaseCfg
-
-from omni.isaac.matterport.exploration import ViewpointSampling, ViewpointSamplingCfg, TrajectorySampling, TrajectorySamplingCfg
-from omni.isaac.matterport.importer import MatterportImporterCfg, UnRealImporterCfg
-from omni.isaac.matterport.domains import MatterportRayCasterCameraCfg
-
 
 EXTENSION_NAME = "Matterport Importer"
 
@@ -70,7 +71,7 @@ def import_class(module_name, class_name) -> object | None:
     try:
         # Import the module dynamically
         module = importlib.import_module(module_name)
-        
+
         # Get the class object from the module
         if hasattr(module, class_name):
             class_obj = getattr(module, class_name)
@@ -89,7 +90,7 @@ class ImportSceneCfg(InteractiveSceneCfg):
     """Number of environments to spawn."""
     env_spacing: float = 1.0
     """Spacing between environments."""
-    
+
     terrain: MatterportImporterCfg | UnRealImporterCfg | TerrainImporterCfg = MatterportImporterCfg()
     """The terrain importer configuration."""
 
@@ -109,9 +110,8 @@ class ImportSceneCfg(InteractiveSceneCfg):
             visible=False,
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.0, 0.0, 1.0)),
-        
     )
-    """For the construction of the scene, need an articualted or rigid object"""   
+    """For the construction of the scene, need an articualted or rigid object"""
 
 
 class MatterPortExtension(omni.ext.IExt):
@@ -179,7 +179,9 @@ class MatterPortExtension(omni.ext.IExt):
         doc_link = "https://github.com/leggedrobotics/omni_isaac_orbit"
 
         overview = "This utility is used to import Matterport3D and UnrealEngine Environments into Isaac Sim. "
-        overview += "It allows to access the semantic information and quickly sample trajectories and render images from them"
+        overview += (
+            "It allows to access the semantic information and quickly sample trajectories and render images from them"
+        )
         overview += "\n\nPress the 'Open in IDE' button to view the source code."
 
         setup_ui_headers(self._ext_id, __file__, title, doc_link, overview)
@@ -204,7 +206,7 @@ class MatterPortExtension(omni.ext.IExt):
                     items=mesh_origin,
                     default_val=mesh_origin.index(self._mesh_origin),
                     on_clicked_fn=self._set_data_origin_cfg,
-                    tooltip=(f"Mesh source of the environment (default: {self._mesh_origin})"),
+                    tooltip=f"Mesh source of the environment (default: {self._mesh_origin})",
                 )
 
     def _build_import_ui(self):
@@ -232,8 +234,16 @@ class MatterPortExtension(omni.ext.IExt):
 
                 if self._mesh_origin == "generator":
                     # get the module and class name of the terrain generator
-                    self._input_fields["module_name"] = str_builder(label="Module Name", default_val="omni.isaac.orbit.terrains.config.rough", tooltip="Module name of the terrain generator")
-                    self._input_fields["class_name"] = str_builder(label="Class Name", default_val="ROUGH_TERRAINS_CFG", tooltip="Class name of the terrain generator")
+                    self._input_fields["module_name"] = str_builder(
+                        label="Module Name",
+                        default_val="omni.isaac.orbit.terrains.config.rough",
+                        tooltip="Module name of the terrain generator",
+                    )
+                    self._input_fields["class_name"] = str_builder(
+                        label="Class Name",
+                        default_val="ROUGH_TERRAINS_CFG",
+                        tooltip="Class name of the terrain generator",
+                    )
                 else:
                     # get the mesh file location
                     kwargs = {
@@ -249,7 +259,6 @@ class MatterPortExtension(omni.ext.IExt):
                     }
                     self._input_fields["input_file"] = str_builder(**kwargs)
                     self._input_fields["input_file"].add_value_changed_fn(check_file_type)
-
 
                 # for matterport also require ply file to access necessary information for camera sensors
                 if self._mesh_origin == "matterport":
@@ -327,7 +336,11 @@ class MatterPortExtension(omni.ext.IExt):
                 self._input_fields["prim_path"] = str_builder(
                     "Prim Path of the Environment",
                     tooltip="Prim path of the environment",
-                    default_val=self._scene_cfg.terrain.prim_path if not isinstance(self._scene_cfg.terrain.prim_path, type(MISSING)) else "/World/terrain",
+                    default_val=(
+                        self._scene_cfg.terrain.prim_path
+                        if not isinstance(self._scene_cfg.terrain.prim_path, type(MISSING))
+                        else "/World/terrain"
+                    ),
                 )
 
     def _build_camera_ui(self):
@@ -341,7 +354,7 @@ class MatterPortExtension(omni.ext.IExt):
             vertical_scrollbar_policy=ui.ScrollBarPolicy.SCROLLBAR_ALWAYS_ON,
         )
         with frame:
-            with ui.VStack(style=get_style(), spacing=5, height=0):              
+            with ui.VStack(style=get_style(), spacing=5, height=0):
                 # define sensor parameters
                 self._sensor_input_fields["camera_semantics"] = cb_builder(
                     label="Semantic Domain",
@@ -411,8 +424,16 @@ class MatterPortExtension(omni.ext.IExt):
         with frame:
             with ui.VStack(style=get_style(), spacing=5, height=0):
 
-                self._input_fields["traj_sampling_module_name"] = str_builder(label="Trajectory Module Name", default_val="omni.isaac.matterport.exploration", tooltip="Module name of the Trajectory Sampling Cfg class")
-                self._input_fields["traj_sampling_class_name"] = str_builder(label="Trajectory Class Name", default_val="TrajectorySamplingCfg", tooltip="Class name of Trajectory Sampling Cfg")
+                self._input_fields["traj_sampling_module_name"] = str_builder(
+                    label="Trajectory Module Name",
+                    default_val="omni.isaac.matterport.exploration",
+                    tooltip="Module name of the Trajectory Sampling Cfg class",
+                )
+                self._input_fields["traj_sampling_class_name"] = str_builder(
+                    label="Trajectory Class Name",
+                    default_val="TrajectorySamplingCfg",
+                    tooltip="Class name of Trajectory Sampling Cfg",
+                )
                 self._input_fields["traj_sampling_nbr_samples"] = int_builder(
                     "Number Trajectory Samples",
                     default_val=1000,
@@ -421,25 +442,39 @@ class MatterPortExtension(omni.ext.IExt):
                 self._input_fields["traj_sampling_min_length"] = float_builder(
                     "Min Trajectory Length",
                     default_val=0.0,
-                    tooltip="Minimum trajectory lenght in Meter (default: 0.0)",
+                    tooltip="Minimum trajectory length in Meter (default: 0.0)",
                 )
                 self._input_fields["traj_sampling_max_length"] = float_builder(
                     "Max Trajectory Length",
                     default_val=10.0,
                     tooltip="Maximum trajectory length in Meter (default: 10.0)",
-                )                
-                self._input_fields["traj_sampling_btn"] = btn_builder("Trajectory Sampling", text="Start", on_clicked_fn=self._execute_trajectory_sampling)
+                )
+                self._input_fields["traj_sampling_btn"] = btn_builder(
+                    "Trajectory Sampling", text="Start", on_clicked_fn=self._execute_trajectory_sampling
+                )
 
-                self._input_fields["viewpoint_sampling_module_name"] = str_builder(label="Viewpoint Module Name", default_val="omni.isaac.matterport.exploration", tooltip="Module name of the Viewpoint Sampling Cfg class")
-                self._input_fields["viewpoint_sampling_class_name"] = str_builder(label="Viewpoint Class Name", default_val="ViewpointSamplingCfg", tooltip="Class name of Viewpoint Sampling Cfg")
+                self._input_fields["viewpoint_sampling_module_name"] = str_builder(
+                    label="Viewpoint Module Name",
+                    default_val="omni.isaac.matterport.exploration",
+                    tooltip="Module name of the Viewpoint Sampling Cfg class",
+                )
+                self._input_fields["viewpoint_sampling_class_name"] = str_builder(
+                    label="Viewpoint Class Name",
+                    default_val="ViewpointSamplingCfg",
+                    tooltip="Class name of Viewpoint Sampling Cfg",
+                )
                 self._input_fields["viewpoint_sampling_nbr_samples"] = int_builder(
                     "Number Viepoint Samples",
                     default_val=1000,
                     tooltip="How many viepoints should be sampled (default: 1000)",
                 )
 
-                self._input_fields["viewpoint_sampling_btn"] = btn_builder("Viewpoint Sampling", text="Start", on_clicked_fn=self._execute_viewpoint_sampling)
-                self._input_fields["viewpoint_rendering_btn"] = btn_builder("Viewpoint Rendering", text="Start", on_clicked_fn=self._execute_viewpoint_rendering)
+                self._input_fields["viewpoint_sampling_btn"] = btn_builder(
+                    "Viewpoint Sampling", text="Start", on_clicked_fn=self._execute_viewpoint_sampling
+                )
+                self._input_fields["viewpoint_rendering_btn"] = btn_builder(
+                    "Viewpoint Rendering", text="Start", on_clicked_fn=self._execute_viewpoint_rendering
+                )
                 # disable rendering button until viewpoints are sampled
                 self._input_fields["viewpoint_rendering_btn"].enabled = False
 
@@ -485,7 +520,7 @@ class MatterPortExtension(omni.ext.IExt):
 
     def _set_data_origin_cfg(self, mesh_origin: str):
         self._mesh_origin = mesh_origin
-        
+
         if mesh_origin == "matterport":
             self._scene_cfg.terrain = MatterportImporterCfg()
             self._allowed_ext = [".obj", ".usd"]
@@ -501,7 +536,7 @@ class MatterPortExtension(omni.ext.IExt):
         else:
             carb.log_warn(f"Invalid mesh origin: {mesh_origin}")
             return
-        
+
         self.build_ui()
 
     async def load_scene(self):
@@ -526,7 +561,7 @@ class MatterPortExtension(omni.ext.IExt):
         # note: this plays the simulator which allows setting up all the physics handles.
         await self.sim.reset_async()
         await self.sim.pause_async()
-        
+
         print("[INFO]: Scene loaded")
 
     def _start_loading(self):
@@ -543,13 +578,23 @@ class MatterPortExtension(omni.ext.IExt):
 
         # add terrain to scene config and load the interactive scene
         self._scene_cfg.terrain.prim_path = self._input_fields["prim_path"].get_value_as_string()
-        self._scene_cfg.terrain.physics_material.improve_patch_friction = self._input_fields["improve_patch_friction"].get_value_as_bool()
-        self._scene_cfg.terrain.physics_material.friction_combine_mode = self.friction_restitution_options[self._input_fields["friction_combine_mode"].get_item_value_model().as_int]
-        self._scene_cfg.terrain.physics_material.restitution_combine_mode = self.friction_restitution_options[self._input_fields["restitution_combine_mode"].get_item_value_model().as_int]
-        self._scene_cfg.terrain.physics_material.static_friction = self._input_fields["friction_static"].get_value_as_float()
-        self._scene_cfg.terrain.physics_material.dynamic_friction = self._input_fields["friction_dynamic"].get_value_as_float()
+        self._scene_cfg.terrain.physics_material.improve_patch_friction = self._input_fields[
+            "improve_patch_friction"
+        ].get_value_as_bool()
+        self._scene_cfg.terrain.physics_material.friction_combine_mode = self.friction_restitution_options[
+            self._input_fields["friction_combine_mode"].get_item_value_model().as_int
+        ]
+        self._scene_cfg.terrain.physics_material.restitution_combine_mode = self.friction_restitution_options[
+            self._input_fields["restitution_combine_mode"].get_item_value_model().as_int
+        ]
+        self._scene_cfg.terrain.physics_material.static_friction = self._input_fields[
+            "friction_static"
+        ].get_value_as_float()
+        self._scene_cfg.terrain.physics_material.dynamic_friction = self._input_fields[
+            "friction_dynamic"
+        ].get_value_as_float()
         self._scene_cfg.terrain.physics_material.restitution = self._input_fields["restitution"].get_value_as_float()
-   
+
         if self._mesh_origin == "matterport":
             self._scene_cfg.terrain.obj_filepath = self._input_fields["input_file"].get_value_as_string()
         elif self._mesh_origin == "multi-mesh-usd" or self._mesh_origin == "single-mesh-usd":
@@ -557,11 +602,14 @@ class MatterPortExtension(omni.ext.IExt):
             self._scene_cfg.terrain.usd_path = self._input_fields["input_file"].get_value_as_string()
         elif self._mesh_origin == "generator":
             self._scene_cfg.terrain.terrain_type = "generator"
-            self._scene_cfg.terrain.terrain_generator = import_class(self._input_fields["module_name"].get_value_as_string(), self._input_fields["class_name"].get_value_as_string())
+            self._scene_cfg.terrain.terrain_generator = import_class(
+                self._input_fields["module_name"].get_value_as_string(),
+                self._input_fields["class_name"].get_value_as_string(),
+            )
         else:
             carb.log_warn(f"Invalid mesh origin: {self._mesh_origin}")
             return
-    
+
         # load scene and init simulationcontext in an async workflow
         asyncio.ensure_future(self.load_scene())
 
@@ -570,7 +618,7 @@ class MatterPortExtension(omni.ext.IExt):
         self._sensor_input_fields["add_camera"].enabled = False
 
         self.build_ui(task_space=True)
-    
+
     ##
     # Add camera to scene
     ##
@@ -580,59 +628,76 @@ class MatterPortExtension(omni.ext.IExt):
         if self._sensor_input_fields["camera_semantics"].get_value_as_bool():
             data_types += ["semantic_segmentation"]
         if self._sensor_input_fields["camera_depth"].get_value_as_bool():
-            data_types += ["distance_to_image_plane"]  
+            data_types += ["distance_to_image_plane"]
 
         if self._mesh_origin == "matterport":
             assert self._input_fields["input_ply_file"].get_value_as_string(), "No ply file found"
 
             # add specialized matterport raycaster camera to scene
-            setattr(self._scene_cfg, f"camera_{self._camera_idx}", MatterportRayCasterCameraCfg(
-                prim_path="{ENV_REGEX_NS}/cube",
-                mesh_prim_paths=[self._input_fields["input_ply_file"].get_value_as_string()],
-                update_period=0,
-                data_types=data_types,
-                debug_vis=True,
-                pattern_cfg=patterns.PinholeCameraPatternCfg(
-                    focal_length=self._sensor_input_fields["focal_length"].get_value_as_float(),
-                    horizontal_aperture=self._sensor_input_fields["horizontal_aperture"].get_value_as_float(),
-                    height=self._sensor_input_fields["cam_height"].get_value_as_int(),
-                    width=self._sensor_input_fields["cam_width"].get_value_as_int(),
-                ),))
+            setattr(
+                self._scene_cfg,
+                f"camera_{self._camera_idx}",
+                MatterportRayCasterCameraCfg(
+                    prim_path="{ENV_REGEX_NS}/cube",
+                    mesh_prim_paths=[self._input_fields["input_ply_file"].get_value_as_string()],
+                    update_period=0,
+                    data_types=data_types,
+                    debug_vis=True,
+                    pattern_cfg=patterns.PinholeCameraPatternCfg(
+                        focal_length=self._sensor_input_fields["focal_length"].get_value_as_float(),
+                        horizontal_aperture=self._sensor_input_fields["horizontal_aperture"].get_value_as_float(),
+                        height=self._sensor_input_fields["cam_height"].get_value_as_int(),
+                        width=self._sensor_input_fields["cam_width"].get_value_as_int(),
+                    ),
+                ),
+            )
         elif self._mesh_origin == "multi-mesh-usd":
             # add usd camera to scene
-            setattr(self._scene_cfg, f"camera_{self._camera_idx}", CameraCfg(
-                prim_path=f"{self._input_fields['prim_path'].get_value_as_string()}/camera_{self._camera_idx}",
-                data_types=data_types,
-                debug_vis=True,
-                height=self._sensor_input_fields["cam_height"].get_value_as_int(),
-                width=self._sensor_input_fields["cam_width"].get_value_as_int(),
-                spawn=sim_utils.PinholeCameraCfg(
-                    focal_length=self._sensor_input_fields["focal_length"].get_value_as_float(),
-                    horizontal_aperture=self._sensor_input_fields["horizontal_aperture"].get_value_as_float(),
-
-                ),))
-        elif self._mesh_origin == "single-mesh-usd" or self._mesh_origin == "generator":
-            assert "semantic_segmentation" not in data_types, "Semantic segmentation is currently not supported for single-mesh-usd and generator"
-            
-            # add orbit ray caster camera to scene
-            setattr(self._scene_cfg, f"camera_{self._camera_idx}", RayCasterCameraCfg(
-                prim_path=f"{self._input_fields['prim_path'].get_value_as_string()}/cube",
-                mesh_prim_paths=[self._input_fields["prim_path"].get_value_as_string()],
-                update_period=0,
-                data_types=data_types,
-                debug_vis=True,
-                pattern_cfg=patterns.PinholeCameraPatternCfg(
-                    focal_length=self._sensor_input_fields["focal_length"].get_value_as_float(),
-                    horizontal_aperture=self._sensor_input_fields["horizontal_aperture"].get_value_as_float(),
+            setattr(
+                self._scene_cfg,
+                f"camera_{self._camera_idx}",
+                CameraCfg(
+                    prim_path=f"{self._input_fields['prim_path'].get_value_as_string()}/camera_{self._camera_idx}",
+                    data_types=data_types,
+                    debug_vis=True,
                     height=self._sensor_input_fields["cam_height"].get_value_as_int(),
                     width=self._sensor_input_fields["cam_width"].get_value_as_int(),
-                ),))
+                    spawn=sim_utils.PinholeCameraCfg(
+                        focal_length=self._sensor_input_fields["focal_length"].get_value_as_float(),
+                        horizontal_aperture=self._sensor_input_fields["horizontal_aperture"].get_value_as_float(),
+                    ),
+                ),
+            )
+        elif self._mesh_origin == "single-mesh-usd" or self._mesh_origin == "generator":
+            assert (
+                "semantic_segmentation" not in data_types
+            ), "Semantic segmentation is currently not supported for single-mesh-usd and generator"
+
+            # add orbit ray caster camera to scene
+            setattr(
+                self._scene_cfg,
+                f"camera_{self._camera_idx}",
+                RayCasterCameraCfg(
+                    prim_path=f"{self._input_fields['prim_path'].get_value_as_string()}/cube",
+                    mesh_prim_paths=[self._input_fields["prim_path"].get_value_as_string()],
+                    update_period=0,
+                    data_types=data_types,
+                    debug_vis=True,
+                    pattern_cfg=patterns.PinholeCameraPatternCfg(
+                        focal_length=self._sensor_input_fields["focal_length"].get_value_as_float(),
+                        horizontal_aperture=self._sensor_input_fields["horizontal_aperture"].get_value_as_float(),
+                        height=self._sensor_input_fields["cam_height"].get_value_as_int(),
+                        width=self._sensor_input_fields["cam_width"].get_value_as_int(),
+                    ),
+                ),
+            )
         else:
             carb.log_warn(f"Invalid mesh origin: {self._mesh_origin}")
             return
 
         print(f"[INFO] Added camera_{self._camera_idx} to scene")
         self._camera_idx += 1
+
     ##
     # Sampling tasks function
     ##
@@ -640,21 +705,33 @@ class MatterPortExtension(omni.ext.IExt):
     def _execute_trajectory_sampling(self):
         if not hasattr(self, "_traj_explorer"):
             # get the config
-            traj_sampling_cfg: TrajectorySamplingCfg = import_class(self._input_fields["traj_sampling_module_name"].get_value_as_string(), self._input_fields["traj_sampling_class_name"].get_value_as_string())()
+            traj_sampling_cfg: TrajectorySamplingCfg = import_class(
+                self._input_fields["traj_sampling_module_name"].get_value_as_string(),
+                self._input_fields["traj_sampling_class_name"].get_value_as_string(),
+            )()
             # execute trajectory sampling
             self._traj_explorer = TrajectorySampling(traj_sampling_cfg, scene=self.scene)
-        
+
         self.sim.play()
-        self._traj_explorer.sample_paths([self._input_fields["traj_sampling_nbr_samples"].get_value_as_int()], [self._input_fields["traj_sampling_min_length"].get_value_as_float()], [self._input_fields["traj_sampling_max_length"].get_value_as_float()])
+        self._traj_explorer.sample_paths(
+            [self._input_fields["traj_sampling_nbr_samples"].get_value_as_int()],
+            [self._input_fields["traj_sampling_min_length"].get_value_as_float()],
+            [self._input_fields["traj_sampling_max_length"].get_value_as_float()],
+        )
 
     def _execute_viewpoint_sampling(self):
         if not hasattr(self, "_viewpoint_explorer"):
             # get the config
-            viewpoint_sampling_cfg: ViewpointSamplingCfg = import_class(self._input_fields["viewpoint_sampling_module_name"].get_value_as_string(), self._input_fields["viewpoint_sampling_class_name"].get_value_as_string())()
+            viewpoint_sampling_cfg: ViewpointSamplingCfg = import_class(
+                self._input_fields["viewpoint_sampling_module_name"].get_value_as_string(),
+                self._input_fields["viewpoint_sampling_class_name"].get_value_as_string(),
+            )()
             # execute viewpoint sampling
             self._viewpoint_explorer = ViewpointSampling(viewpoint_sampling_cfg, scene=self.scene)
-        
-        self._viepoint_samples = self._viewpoint_explorer.sample_viewpoints(self._input_fields["viewpoint_sampling_nbr_samples"].get_value_as_int())
+
+        self._viepoint_samples = self._viewpoint_explorer.sample_viewpoints(
+            self._input_fields["viewpoint_sampling_nbr_samples"].get_value_as_int()
+        )
         # enable rendering button
         self._input_fields["viewpoint_rendering_btn"].enabled = True
 

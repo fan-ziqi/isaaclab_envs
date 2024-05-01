@@ -6,20 +6,20 @@
 
 from __future__ import annotations
 
+import builtins
+
 import carb
 import networkx as nx
 import numpy as np
 import omni.isaac.core.utils.prims as prims_utils
 import scipy.spatial.transform as tf
 import torch
-import builtins
-
 from omni.isaac.core.utils.semantics import get_semantics
 from omni.isaac.matterport.domains import MatterportRayCaster, MatterportRayCasterCamera
 from omni.isaac.matterport.utils.prims import get_all_meshes
 from omni.isaac.orbit.scene import InteractiveScene
-from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.sensors import RayCaster, RayCasterCamera
+from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils.warp import raycast_mesh
 from omni.physx import get_physx_scene_query_interface
 from pxr import Gf, Usd, UsdGeom
@@ -56,10 +56,13 @@ class TerrainAnalysis:
 
     def _sample_points(self):
         # get the raycaster sensor that should be used to raycast against all the ground meshes
-        if isinstance(self.scene.sensors[self.cfg.raycaster_sensor], MatterportRayCaster | MatterportRayCasterCamera | RayCaster | RayCasterCamera):
-            self._raycaster: MatterportRayCaster | MatterportRayCasterCamera | RayCaster | RayCasterCamera = self.scene.sensors[
-                self.cfg.raycaster_sensor
-            ]
+        if isinstance(
+            self.scene.sensors[self.cfg.raycaster_sensor],
+            MatterportRayCaster | MatterportRayCasterCamera | RayCaster | RayCasterCamera,
+        ):
+            self._raycaster: MatterportRayCaster | MatterportRayCasterCamera | RayCaster | RayCasterCamera = (
+                self.scene.sensors[self.cfg.raycaster_sensor]
+            )
 
             # get mesh dimensions
             x_max, y_max, x_min, y_min = self._get_mesh_dimensions()
