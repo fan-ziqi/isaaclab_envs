@@ -89,17 +89,18 @@ class MatterportImporter(TerrainImporter):
 
         if builtins.ISAAC_LAUNCHED_FROM_TERMINAL is False:
             self.load_world()
+
+            if isinstance(self.cfg.num_envs, int):
+                self.configure_env_origins()
+
+            # set initial state of debug visualization
+            self.set_debug_vis(self.cfg.debug_vis)
+
         else:
             carb.log_info("[INFO]: Loading in extension mode requires calling 'load_world_async'")
 
-        if isinstance(self.cfg.num_envs, int):
-            self.configure_env_origins()
-
-        # set initial state of debug visualization
-        self.set_debug_vis(self.cfg.debug_vis)
-
-        # Converter
-        self.converter: MatterportConverter = MatterportConverter(self.cfg.obj_filepath, self.cfg.asset_converter)
+            # Converter
+            self.converter: MatterportConverter = MatterportConverter(self.cfg.obj_filepath, self.cfg.asset_converter)
 
     async def load_world_async(self):
         """Function called when clicking load button"""
@@ -107,6 +108,11 @@ class MatterportImporter(TerrainImporter):
         await self.load_matterport()
         # update stage for any remaining process.
         await stage_utils.update_stage_async()
+        # get environment origins
+        if isinstance(self.cfg.num_envs, int):
+            self.configure_env_origins()
+        # set initial state of debug visualization
+        self.set_debug_vis(self.cfg.debug_vis)
         # Now we are ready!
         carb.log_info("[INFO]: Setup complete...")
 

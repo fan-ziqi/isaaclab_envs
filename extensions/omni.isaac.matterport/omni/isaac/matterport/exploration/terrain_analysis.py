@@ -12,11 +12,14 @@ import numpy as np
 import omni.isaac.core.utils.prims as prims_utils
 import scipy.spatial.transform as tf
 import torch
+import builtins
+
 from omni.isaac.core.utils.semantics import get_semantics
 from omni.isaac.matterport.domains import MatterportRayCaster, MatterportRayCasterCamera
 from omni.isaac.matterport.utils.prims import get_all_meshes
 from omni.isaac.orbit.scene import InteractiveScene
 from omni.isaac.orbit.sim import SimulationContext
+from omni.isaac.orbit.sensors import RayCaster, RayCasterCamera
 from omni.isaac.orbit.utils.warp import raycast_mesh
 from omni.physx import get_physx_scene_query_interface
 from pxr import Gf, Usd, UsdGeom
@@ -53,15 +56,15 @@ class TerrainAnalysis:
 
     def _sample_points(self):
         # get the raycaster sensor that should be used to raycast against all the ground meshes
-        if isinstance(self.scene.sensors[self.cfg.raycaster_sensor], MatterportRayCaster | MatterportRayCasterCamera):
-            self._raycaster: MatterportRayCaster | MatterportRayCasterCamera = self.scene.sensors[
+        if isinstance(self.scene.sensors[self.cfg.raycaster_sensor], MatterportRayCaster | MatterportRayCasterCamera | RayCaster | RayCasterCamera):
+            self._raycaster: MatterportRayCaster | MatterportRayCasterCamera | RayCaster | RayCasterCamera = self.scene.sensors[
                 self.cfg.raycaster_sensor
             ]
 
             # get mesh dimensions
             x_max, y_max, x_min, y_min = self._get_mesh_dimensions()
         else:
-            # raycaster is not available in unreal meshes as it only works with a single mesh
+            # raycaster is not available in multi-mesh scenes (i.e. unreal meshes) as it only works with a single mesh
             # TODO (@pascal-roth) change when raycaster can handle multiple meshes
             self._raycaster = None
 
@@ -160,7 +163,10 @@ class TerrainAnalysis:
         # debug visualization
         if self.cfg.viz_graph:
             env_render_steps = 1000
-            print(f"[INFO] Visualizing graph. Will do {env_render_steps} render steps...")
+            if builtins.ISAAC_LAUNCHED_FROM_TERMINAL is False:
+                print(f"[INFO] Visualizing graph. Will do {env_render_steps} render steps...")
+            else:
+                print("[INFO] Visualizing graph.")
 
             # in headless mode, we cannot visualize the graph and omni.debug.draw is not available
             try:
@@ -195,15 +201,16 @@ class TerrainAnalysis:
                             [1],
                         )
 
-                sim = SimulationContext.instance()
-                for _ in range(env_render_steps):
-                    sim.render()
+                if builtins.ISAAC_LAUNCHED_FROM_TERMINAL is False:
+                    sim = SimulationContext.instance()
+                    for _ in range(env_render_steps):
+                        sim.render()
 
-                # clear the drawn points and lines
-                draw_interface.clear_points()
-                draw_interface.clear_lines()
+                    # clear the drawn points and lines
+                    draw_interface.clear_points()
+                    draw_interface.clear_lines()
 
-                print("[INFO] Finished visualizing graph.")
+                    print("[INFO] Finished visualizing graph.")
 
             except ImportError:
                 print("[WARNING] Graph Visualization is not available in headless mode.")

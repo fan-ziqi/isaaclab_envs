@@ -116,7 +116,7 @@ class ExplorationCfg:
     sim: sim_utils.SimulationCfg = sim_utils.SimulationCfg()
     exploration_scene: InteractiveSceneCfg = ExplorationSceneCfg(num_envs=1, env_spacing=1.0)
     """Parameters to construct the matterport scene"""
-    terrain_analysis: TerrainAnalysisCfg = TerrainAnalysisCfg(raycaster_sensor="semantic_camera")
+    terrain_analysis: TerrainAnalysisCfg = TerrainAnalysisCfg(raycaster_sensor="camera_1")
     """Name of the camera object in the scene definition used for the terrain analysis."""
 
     # sampling

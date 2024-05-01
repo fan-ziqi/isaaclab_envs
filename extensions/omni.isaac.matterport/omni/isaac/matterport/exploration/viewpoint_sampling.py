@@ -10,6 +10,7 @@ import os
 import pickle
 import random
 import time
+import builtins
 
 import cv2
 import numpy as np
@@ -106,22 +107,26 @@ class ViewpointSampling:
         samples[:, :3] = self.terrain_analyser.points[sample_locations[:, 0]]
         samples[:, 3:] = math_utils.quat_from_euler_xyz(x_angles, y_angles, z_angles)
 
+        print(f"[INFO] Sampled {sample_locations_count} viewpoints.")
+        
         # debug points and orientation
         if self.cfg.debug_viz:
             env_render_steps = 1000
-            print(f"[INFO] Visualizing {sample_locations_count} samples for {env_render_steps} render steps...")
             marker_cfg = GREEN_ARROW_X_MARKER_CFG.copy()
             marker_cfg.prim_path = "/Visuals/viewpoints"
             marker_cfg.markers["arrow"].scale = (0.1, 0.1, 0.1)
             self.visualizer = VisualizationMarkers(marker_cfg)
             self.visualizer.visualize(samples[:, :3], samples[:, 3:])
+            
+            # check if launched from terminal or in extension workflow
+            if builtins.ISAAC_LAUNCHED_FROM_TERMINAL is False:
+                print(f"[INFO] Visualizing {sample_locations_count} samples for {env_render_steps} render steps...")
+                for _ in range(env_render_steps):
+                    self.sim.render()
 
-            for i in range(env_render_steps):
-                self.sim.render()
-
-            self.visualizer.set_visibility(False)
-            print("[INFO] Done visualizing.")
-
+                self.visualizer.set_visibility(False)
+                print("[INFO] Done visualizing.")
+                
         return samples
 
     def render_viewpoints(self, samples: torch.Tensor):

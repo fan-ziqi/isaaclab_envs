@@ -42,5 +42,5 @@ class TrajectorySamplingCfg(ExplorationCfg):
     max_images: int = 2000
     """Maximum number of images recorded"""
     save_path: str = "/home/pascal/viplanner/imperative_learning/data"
-    suffix: str | None = "cam_mount"
+    suffix: str | None = None
     """Path to save the data to (directly with env name will be created)"""

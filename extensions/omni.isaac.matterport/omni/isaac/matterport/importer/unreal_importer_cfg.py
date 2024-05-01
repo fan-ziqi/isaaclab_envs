@@ -20,22 +20,17 @@ class UnRealImporterCfg(TerrainImporterCfg):
 
     """
 
-    # scale
-    scale: float = 0.01  # 0.01  # carla: 0.01 nomoko: 1  park: 0.01 warehouse: 1.0 # scale the scene to be in meters
-    # up axis
-    axis_up: str = "Y"  # carla, nomoko: "Y", park, warehouse: "Z"
+    sem_mesh_to_class_map: str | None = None
+    """Path to the mesh to semantic class mapping file.
+    
+    If set, semantic classes will be added to the scene. Default is None."""
+
     duplicate_cfg_file: str | list | None = None
     """Configuration file(s) to duplicate prims in the scene.
 
     Selected prims are clone by the provoided factor and moved to the defined location. Default is None."""
 
-    # mesh to semantic class mapping --> only if set, semantic classes will be added to the scene
-    sem_mesh_to_class_map: str | None = (
-        None  # os.path.join(DATA_DIR, "park", "keyword_mapping.yml")  os.path.join(DATA_DIR, "town01", "keyword_mapping.yml")
-    )
-    # add Groundplane to the scene
-    groundplane: bool = True
-    # add people to the scene
     people_config_file: str | None = None
+    """Path to the people configuration file.
 
-    groundplane: bool = True
+    If set, people define in the Nvidia Nuclues can be added to the scene. Default is None."""
