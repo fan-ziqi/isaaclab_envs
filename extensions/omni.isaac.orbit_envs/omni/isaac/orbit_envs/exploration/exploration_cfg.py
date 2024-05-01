@@ -49,7 +49,7 @@ class ExplorationSceneCfg(InteractiveSceneCfg):
     )
 
     # camera snesors
-    semantic_camera = MatterportRayCasterCameraCfg(
+    camera_0 = MatterportRayCasterCameraCfg(
         prim_path="{ENV_REGEX_NS}/cube",
         mesh_prim_paths=[PLY_PATH],
         update_period=0,
@@ -63,7 +63,7 @@ class ExplorationSceneCfg(InteractiveSceneCfg):
             width=1280,
         ),
     )
-    depth_camera = MatterportRayCasterCameraCfg(
+    camera_1 = MatterportRayCasterCameraCfg(
         prim_path="{ENV_REGEX_NS}/cube",
         mesh_prim_paths=[PLY_PATH],
         update_period=0,
@@ -116,7 +116,7 @@ class ExplorationCfg:
     sim: sim_utils.SimulationCfg = sim_utils.SimulationCfg()
     exploration_scene: InteractiveSceneCfg = ExplorationSceneCfg(num_envs=1, env_spacing=1.0)
     """Parameters to construct the matterport scene"""
-    terrain_analysis: TerrainAnalysisCfg = TerrainAnalysisCfg(raycaster_sensor="camera_1")
+    terrain_analysis: TerrainAnalysisCfg = TerrainAnalysisCfg(raycaster_sensor="camera_0")
     """Name of the camera object in the scene definition used for the terrain analysis."""
 
     # sampling

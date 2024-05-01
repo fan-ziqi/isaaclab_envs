@@ -62,14 +62,12 @@ class TestTerrainCfg(InteractiveSceneCfg):
             dynamic_friction=1.0,
         ),
         usd_path="/home/pascal/viplanner/env/carla_exp/carla.usd",
-        groundplane=True,
         duplicate_cfg_file=[
             os.path.join(DATA_DIR, "unreal", "town01", "cw_multiply_cfg.yml"),
             os.path.join(DATA_DIR, "unreal", "town01", "vehicle_cfg.yml"),
         ],
         sem_mesh_to_class_map=os.path.join(DATA_DIR, "unreal", "town01", "keyword_mapping.yml"),
         people_config_file=os.path.join(DATA_DIR, "unreal", "town01", "people_cfg.yml"),
-        axis_up="Y",
     )
     # articulation
     robot: ArticulationCfg = ANYMAL_C_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
@@ -107,6 +105,10 @@ class TestTerrainCfg(InteractiveSceneCfg):
         init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, 500.0)),
     )
 
+    def __post_init__(self):
+        """Post initialization."""
+        # Set the initial robot position
+        self.robot.init_state.pos = [110.0, -125.0, 0.6]
 
 """
 Main
@@ -119,7 +121,7 @@ def main():
     sim_cfg = sim_utils.SimulationCfg()
     sim = SimulationContext(sim_cfg)
     # Set main camera
-    sim.set_camera_view([10.0, 1.5, 2.0], [8.0, -1.0, 0.5])
+    sim.set_camera_view([130, -125, 10], [100, -130, 0.5])
     # Design scene
     scene_cfg = TestTerrainCfg(num_envs=args_cli.num_envs, env_spacing=2.0)
     scene = InteractiveScene(scene_cfg)

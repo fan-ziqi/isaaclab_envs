@@ -70,6 +70,9 @@ class MatterportRayCaster(RayCaster):
         self.mapping_mpcat40 = torch.tensor(mapping["mpcat40index"].to_numpy(), device=self._device, dtype=torch.long)
         self.classes_mpcat40 = pd.read_csv(DATA_DIR + "/matterport/mpcat40.tsv", sep="\t")["mpcat40"].to_numpy()
 
+        # init buffer for semantic class of the rays
+        self._data.ray_class_ids = torch.zeros(self._num_envs, self.num_rays, device=self._device, dtype=torch.long)
+
     def _initialize_warp_meshes(self):
         # check if mesh is already loaded
         assert len(self.cfg.mesh_prim_paths) == 1, "Currently only one Matterport Environment is supported."

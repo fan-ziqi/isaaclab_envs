@@ -108,7 +108,13 @@ class ViewpointSampling:
         samples[:, 3:] = math_utils.quat_from_euler_xyz(x_angles, y_angles, z_angles)
 
         print(f"[INFO] Sampled {sample_locations_count} viewpoints.")
+        
+        # save samples
+        with open(filename, "wb") as f:
+            pickle.dump(samples, f)
 
+        print(f"[INFO] Saved {sample_locations_count} viewpoints with seed {seed} to {filename}.")
+        
         # debug points and orientation
         if self.cfg.debug_viz:
             env_render_steps = 1000
@@ -160,6 +166,7 @@ class ViewpointSampling:
 
         # save images
         samples = samples.to(self.scene.device)
+        start_time = time.time()
         for i in range(num_rounds):
             # get samples idx
             samples_idx = torch.arange(i * num_envs, min((i + 1) * num_envs, samples.shape[0]))
@@ -180,7 +187,6 @@ class ViewpointSampling:
             # update scene buffers
             self.scene.update(self.sim.get_physics_dt())
             # render
-            start_time = time.time()
             for cam, annotator in self.cfg.cameras.items():
                 image_data_np = self.scene.sensors[cam].data.output[annotator].cpu().numpy()
                 # filter nan

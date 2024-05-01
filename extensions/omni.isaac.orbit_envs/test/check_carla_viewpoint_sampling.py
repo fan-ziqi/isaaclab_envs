@@ -63,17 +63,15 @@ class TestTerrainCfg(InteractiveSceneCfg):
             dynamic_friction=1.0,
         ),
         usd_path="/home/pascal/viplanner/env/carla_exp/carla.usd",
-        groundplane=True,
         duplicate_cfg_file=[
             os.path.join(DATA_DIR, "unreal", "town01", "cw_multiply_cfg.yml"),
             os.path.join(DATA_DIR, "unreal", "town01", "vehicle_cfg.yml"),
         ],
         sem_mesh_to_class_map=os.path.join(DATA_DIR, "unreal", "town01", "keyword_mapping.yml"),
         people_config_file=os.path.join(DATA_DIR, "unreal", "town01", "people_cfg.yml"),
-        axis_up="Y",
     )
     # camera
-    semantic_camera = CameraCfg(
+    camera_0 = CameraCfg(
         prim_path="{ENV_REGEX_NS}/sem_cam",
         update_period=0,
         data_types=["semantic_segmentation"],
@@ -86,7 +84,7 @@ class TestTerrainCfg(InteractiveSceneCfg):
             horizontal_aperture=20.955,
         ),
     )
-    depth_camera = CameraCfg(
+    camera_1 = CameraCfg(
         prim_path="{ENV_REGEX_NS}/depth_cam",
         update_period=0,
         data_types=["distance_to_image_plane"],
@@ -121,9 +119,10 @@ def main():
     cfg.terrain_analysis.semantic_cost_mapping = CarlaSemanticCostMapping()
     cfg.terrain_analysis.grid_resolution = 1.0
     cfg.terrain_analysis.sample_points = 10000
-
     # limit space to be within the road network
     cfg.terrain_analysis.dim_limiter_prim = "Road_Sidewalk"
+    # enable debug visualization
+    cfg.terrain_analysis.viz_graph = True
 
     explorer = ViewpointSampling(cfg)
     # Now we are ready!
