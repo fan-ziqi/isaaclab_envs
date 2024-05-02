@@ -17,10 +17,10 @@ import torch
 import trimesh
 import warp as wp
 from omni.isaac.core.prims import XFormPrimView
-from omni.isaac.orbit_envs.domains import DATA_DIR
 from omni.isaac.orbit.sensors.ray_caster import RayCaster
 from omni.isaac.orbit.utils.math import convert_quat, quat_apply, quat_apply_yaw
 from omni.isaac.orbit.utils.warp import raycast_mesh
+from omni.isaac.orbit_envs.domains import DATA_DIR
 
 from .matterport_raycaster_data import MatterportRayCasterData
 

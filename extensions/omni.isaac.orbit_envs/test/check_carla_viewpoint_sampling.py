@@ -34,15 +34,15 @@ simulation_app = app_launcher.app
 import os
 
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit_envs.domains import DATA_DIR
-from omni.isaac.orbit_envs.exploration import ViewpointSampling, ViewpointSamplingCfg
-from omni.isaac.orbit_envs.exploration.carla_class_cost import CarlaSemanticCostMapping
-from omni.isaac.orbit_envs.importer import UnRealImporterCfg
 from omni.isaac.orbit.assets import AssetBaseCfg
 from omni.isaac.orbit.scene import InteractiveSceneCfg
 from omni.isaac.orbit.sensors import CameraCfg
 from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils import configclass
+from omni.isaac.orbit_envs.domains import DATA_DIR
+from omni.isaac.orbit_envs.exploration import ViewpointSampling, ViewpointSamplingCfg
+from omni.isaac.orbit_envs.exploration.carla_class_cost import CarlaSemanticCostMapping
+from omni.isaac.orbit_envs.importer import UnRealImporterCfg
 
 """
 Main

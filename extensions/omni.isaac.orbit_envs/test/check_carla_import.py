@@ -30,13 +30,13 @@ simulation_app = app_launcher.app
 import os
 
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit_envs.domains import DATA_DIR
-from omni.isaac.orbit_envs.importer import UnRealImporterCfg
 from omni.isaac.orbit.assets import ArticulationCfg, AssetBaseCfg
 from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
 from omni.isaac.orbit.sensors import CameraCfg
 from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils import configclass
+from omni.isaac.orbit_envs.domains import DATA_DIR
+from omni.isaac.orbit_envs.importer import UnRealImporterCfg
 
 ##
 # Pre-defined configs
@@ -109,6 +109,7 @@ class TestTerrainCfg(InteractiveSceneCfg):
         """Post initialization."""
         # Set the initial robot position
         self.robot.init_state.pos = [110.0, -125.0, 0.6]
+
 
 """
 Main

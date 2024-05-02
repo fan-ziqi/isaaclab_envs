@@ -41,14 +41,14 @@ mpl.use("Qt5Agg")
 
 import omni.isaac.core.utils.prims as prim_utils
 from omni.isaac.core.utils.viewports import set_camera_view
-from omni.isaac.orbit_envs.config import MatterportImporterCfg
-from omni.isaac.orbit_envs.domains.matterport_raycast_camera import (
-    MatterportRayCasterCamera,
-)
 from omni.isaac.orbit.sensors.camera import Camera, CameraCfg
 from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg, patterns
 from omni.isaac.orbit.sim import SimulationCfg, SimulationContext
 from omni.isaac.orbit.sim.spawners import PinholeCameraCfg
+from omni.isaac.orbit_envs.config import MatterportImporterCfg
+from omni.isaac.orbit_envs.domains.matterport_raycast_camera import (
+    MatterportRayCasterCamera,
+)
 
 
 def main():

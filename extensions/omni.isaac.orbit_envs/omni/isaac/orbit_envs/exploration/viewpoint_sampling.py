@@ -108,14 +108,14 @@ class ViewpointSampling:
         samples[:, 3:] = math_utils.quat_from_euler_xyz(x_angles, y_angles, z_angles)
 
         print(f"[INFO] Sampled {sample_locations_count} viewpoints.")
-        
+
         # save samples
         os.makedirs(filedir, exist_ok=True)
         with open(filename, "wb") as f:
             pickle.dump(samples, f)
 
         print(f"[INFO] Saved {sample_locations_count} viewpoints with seed {seed} to {filename}.")
-        
+
         # debug points and orientation
         if self.cfg.debug_viz:
             env_render_steps = 1000

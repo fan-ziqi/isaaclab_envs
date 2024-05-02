@@ -6,12 +6,12 @@
 
 import omni.isaac.orbit.sim as sim_utils
 import torch
-from omni.isaac.orbit_envs.domains import MatterportRayCasterCameraCfg
-from omni.isaac.orbit_envs.importer import MatterportImporterCfg
 from omni.isaac.orbit.assets import AssetBaseCfg, RigidObjectCfg
 from omni.isaac.orbit.scene import InteractiveSceneCfg
 from omni.isaac.orbit.sensors import patterns
 from omni.isaac.orbit.utils import configclass
+from omni.isaac.orbit_envs.domains import MatterportRayCasterCameraCfg
+from omni.isaac.orbit_envs.importer import MatterportImporterCfg
 
 from .terrain_analysis_cfg import TerrainAnalysisCfg
 

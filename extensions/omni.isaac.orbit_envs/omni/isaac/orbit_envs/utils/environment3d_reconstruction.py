@@ -1,3 +1,9 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 import os
 
 import cv2
@@ -61,7 +67,7 @@ class EnvironmentReconstruction:
             )
             self._cfg.point_cloud_batch_size = self._end_idx
 
-        print("[INFO] total number of images for reconstruction:" f" {int(self._end_idx)}")
+        print(f"[INFO] total number of images for reconstruction: {int(self._end_idx)}")
 
         # get pixel tensor for reprojection
         pixels = self._computePixelTensor()
@@ -75,7 +81,12 @@ class EnvironmentReconstruction:
         if self._cfg.semantics:
             sem_map_all = []
 
-        for img_counter, img_idx in enumerate(tqdm(range(self._end_idx), desc="Reconstructing 3D Points",)):
+        for img_counter, img_idx in enumerate(
+            tqdm(
+                range(self._end_idx),
+                desc="Reconstructing 3D Points",
+            )
+        ):
             im = self._load_depth_image(img_idx)
 
             # project points in world frame
@@ -95,7 +106,7 @@ class EnvironmentReconstruction:
 
             # update point cloud
             if img_counter % self._cfg.point_cloud_batch_size == 0:
-                print("[INFO] Updating open3d point cloud with" f" {self._cfg.point_cloud_batch_size} images ...")
+                print(f"[INFO] Updating open3d point cloud with {self._cfg.point_cloud_batch_size} images ...")
 
                 if first_batch:
                     self._pcd.points = o3d.utility.Vector3dVector(np.vstack(points_all))
@@ -116,7 +127,7 @@ class EnvironmentReconstruction:
                     sem_map_all = []
 
                 # apply downsampling
-                print("[INFO] downsampling point cloud with voxel size" f" {self._cfg.voxel_size} ...")
+                print(f"[INFO] downsampling point cloud with voxel size {self._cfg.voxel_size} ...")
                 self._pcd = self._pcd.voxel_down_sample(self._cfg.voxel_size)
 
         # add last batch
@@ -156,7 +167,7 @@ class EnvironmentReconstruction:
         print("[INFO] save output files to: " + save_path)
 
         # save clouds
-        o3d.io.write_point_cloud(os.path.join(save_path, "cloud.ply"), self._pcd) 
+        o3d.io.write_point_cloud(os.path.join(save_path, "cloud.ply"), self._pcd)
         print("saved point cloud to ply file.")
 
     @property
@@ -169,8 +180,8 @@ class EnvironmentReconstruction:
 
     def _read_extrinsic(self):
         """Read the camera extrinsic parameters from file.
-        
-        The extrinsic parameters are stored in a text file with the following format: x y z qw qx qy qz and are 
+
+        The extrinsic parameters are stored in a text file with the following format: x y z qw qx qy qz and are
         converted here to x y z qx qy qz qw format."""
         self.extrinsics = np.loadtxt(self._cfg.data_dir + "/camera_poses.txt", delimiter=",")
 
@@ -179,15 +190,21 @@ class EnvironmentReconstruction:
 
     def _read_intrinsic(self):
         """Read the camera intrinsic parameters from file."""
-        self.K_depth = np.loadtxt(os.path.join(self._cfg.data_dir, self._cfg.depth_cam_name, "intrinsics.txt"), delimiter=",")
+        self.K_depth = np.loadtxt(
+            os.path.join(self._cfg.data_dir, self._cfg.depth_cam_name, "intrinsics.txt"), delimiter=","
+        )
         if self._cfg.semantics:
-            self.K_sem = np.loadtxt(os.path.join(self._cfg.data_dir, self._cfg.semantic_cam_name, "intrinsics.txt"), delimiter=",")
+            self.K_sem = np.loadtxt(
+                os.path.join(self._cfg.data_dir, self._cfg.semantic_cam_name, "intrinsics.txt"), delimiter=","
+            )
 
     def _load_depth_image(self, idx: int) -> np.ndarray:
         """Load depth image from file."""
-        
+
         # get path to images
-        img_path = os.path.join(self._cfg.data_dir, self._cfg.depth_cam_name, "distance_to_image_plane", str(idx).zfill(4))
+        img_path = os.path.join(
+            self._cfg.data_dir, self._cfg.depth_cam_name, "distance_to_image_plane", str(idx).zfill(4)
+        )
 
         if os.path.isfile(img_path + ".npy"):
             img_array = np.load(img_path + ".npy") / self._cfg.depth_scale
@@ -195,7 +212,7 @@ class EnvironmentReconstruction:
             img_array = cv2.imread(img_path + ".png", cv2.IMREAD_ANYDEPTH) / self._cfg.depth_scale
         else:
             raise FileNotFoundError(f"Depth image {img_path} not found.")
-        
+
         # set invalid depth values to 0
         img_array[~np.isfinite(img_array)] = 0
         return img_array
@@ -218,7 +235,9 @@ class EnvironmentReconstruction:
 
     def _get_semantic_image(self, points, idx):
         # load semantic image and pose
-        img_path = os.path.join(self._cfg.data_dir, self._cfg.semantic_cam_name, "semantic_segmentation", str(idx).zfill(4) + ".png")
+        img_path = os.path.join(
+            self._cfg.data_dir, self._cfg.semantic_cam_name, "semantic_segmentation", str(idx).zfill(4) + ".png"
+        )
 
         assert os.path.isfile(img_path), f"Semantic image {img_path} not found."
         sem_image = cv2.imread(img_path)  # loads in bgr order
@@ -250,4 +269,3 @@ class EnvironmentReconstruction:
         filter_idx[np.where(filter_idx)[0][non_classified_idx]] = False
 
         return sem_annotation, filter_idx
-

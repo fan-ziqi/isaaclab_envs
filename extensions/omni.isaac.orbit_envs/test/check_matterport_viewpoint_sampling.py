@@ -32,8 +32,8 @@ simulation_app = app_launcher.app
 
 """Rest everything follows."""
 import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit_envs.exploration import ViewpointSampling, ViewpointSamplingCfg
 from omni.isaac.orbit.sim import SimulationContext
+from omni.isaac.orbit_envs.exploration import ViewpointSampling, ViewpointSamplingCfg
 
 """
 Main

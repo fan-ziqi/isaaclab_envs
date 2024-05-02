@@ -27,14 +27,17 @@ simulation_app = app_launcher.app
 
 """Rest everything follows."""
 
-from omni.isaac.orbit_envs.utils.environment3d_reconstruction_cfg import ReconstructionCfg
-from omni.isaac.orbit_envs.utils.environment3d_reconstruction import EnvironmentReconstruction
-
+from omni.isaac.orbit_envs.utils.environment3d_reconstruction import (
+    EnvironmentReconstruction,
+)
+from omni.isaac.orbit_envs.utils.environment3d_reconstruction_cfg import (
+    ReconstructionCfg,
+)
 
 if __name__ == "__main__":
     cfg = ReconstructionCfg()
     cfg.data_dir = "/home/pascal/viplanner/imperative_learning/data/temp"
-    
+
     # start depth reconstruction
     depth_constructor = EnvironmentReconstruction(cfg)
     depth_constructor.depth_reconstruction()
