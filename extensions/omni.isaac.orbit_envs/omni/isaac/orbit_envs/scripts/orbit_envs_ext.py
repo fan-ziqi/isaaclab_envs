@@ -42,7 +42,7 @@ from omni.isaac.ui.ui_utils import (
     str_builder,
 )
 
-EXTENSION_NAME = "Matterport Importer"
+EXTENSION_NAME = "Orbit Environments"
 
 
 def is_mesh_file(path: str, allowed_ext: list[str] = [".obj", ".usd"]) -> bool:
@@ -114,7 +114,7 @@ class ImportSceneCfg(InteractiveSceneCfg):
     """For the construction of the scene, need an articualted or rigid object"""
 
 
-class MatterPortExtension(omni.ext.IExt):
+class OrbitEnvsExtension(omni.ext.IExt):
     """Extension to load Matterport 3D Environments into Isaac Sim"""
 
     def on_startup(self, ext_id):

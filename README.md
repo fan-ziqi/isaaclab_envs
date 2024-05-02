@@ -5,7 +5,7 @@
 
 ---
 
-# Omniverse Matterport3D and Unreal Engine Assets Extensions
+# Omniverse Semantic Enviornment Extension
 
 [![IsaacSim](https://img.shields.io/badge/IsaacSim-2023.1.1-silver.svg)](https://docs.omniverse.nvidia.com/isaacsim/latest/overview.html)
 [![Orbit](https://img.shields.io/badge/Orbit-0.3.0-silver)](https://isaac-orbit.github.io/orbit/)
@@ -14,16 +14,11 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 [![License](https://img.shields.io/badge/license-BSD--3-yellow.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-This repository contains the extensions for Matterport3D and Unreal Engine Assets.
-The extensions enable the easy loading of assets into Isaac Sim and have access to the semantic labels.
+Extension for omniverse isaac sim that allows to simply load environments from e.g. Matterport3D or Unreal Engine, and either use their semantic information or quickly augment them. 
+In addition, it includes tasks to quickly render images from different domains with different field of views or sample trajectories.
+It can be used either with standalone scripts or in an extension workflow using the GUI. 
 They are developed as part of the ViPlanner project ([Paper](https://arxiv.org/abs/2310.00982) | [Code](https://github.com/leggedrobotics/viplanner))
 and are based on the [Orbit](https://isaac-orbit.github.io/) framework.
-
-
-
-Always use the matterport raycast camera. Matterport meshes are loaded as many different meshes which is currentlt not supported in Orbit.
-Instead, the MatterportRaycaster uses the ply mesh which is a single mesh.
-
 
 ## Installation
 
@@ -42,10 +37,16 @@ ln -s {ORBIT_ENVS_PROJECT_DIR}/extensions/omni.isaac.carla .
 4. Then run the orbit installer script.
 
 ```
-./orbit.sh -i -e
+./orbit.sh -i
 ```
 
+Always use the matterport raycast camera. Matterport meshes are loaded as many different meshes which is currentlt not supported in Orbit.
+Instead, the MatterportRaycaster uses the ply mesh which is a single mesh.
+
 ## Usage
+
+
+### Extension Workflow
 
 For the Matterport extension, a GUI interface is available. To use it, start the simulation:
 
@@ -57,6 +58,9 @@ Then, in the GUI, go to `Window -> Extensions` and type `Matterport` in the sear
 Enable it to open the GUI interface.
 
 To use both as part of an Orbit workflow, please refer to the [ViPlanner Demo](https://github.com/leggedrobotics/viplanner/tree/main/omniverse).
+
+
+
 
 
 ## <a name="CitingViPlanner"></a>Citing

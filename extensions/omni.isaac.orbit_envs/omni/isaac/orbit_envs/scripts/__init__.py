@@ -4,6 +4,6 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from .matterport_ext import MatterPortExtension
+from .orbit_envs_ext import OrbitEnvsExtension
 
-__all__ = ["MatterPortExtension"]
+__all__ = ["OrbitEnvsExtension"]
