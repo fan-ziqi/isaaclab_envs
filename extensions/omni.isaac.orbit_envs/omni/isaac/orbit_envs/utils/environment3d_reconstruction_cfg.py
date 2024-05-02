@@ -1,4 +1,5 @@
 from omni.isaac.orbit.utils import configclass
+from dataclasses import MISSING
 
 
 @configclass
@@ -7,33 +8,36 @@ class ReconstructionCfg:
     Arguments for 3D reconstruction using depth maps
     """
 
-    # directory where the environment with the depth (and semantic) images is located
-    data_dir: str = "${USER_PATH_TO_DATA}"
-    # environment name
-    env: str = "town01"
-    # image suffix
-    depth_suffix = "_cam0"
-    sem_suffix = "_cam1"
-    # higher resolution depth images available for reconstruction  (meaning that the depth images are also taked by the semantic camera)
-    high_res_depth: bool = False
-
+    # input data parameters
+    data_dir: str = MISSING
+    """Data direcotry where the rendered images with the extrinsic and intrinsic camera parameters are stored"""
+    depth_cam_name: str = "camera_1"
+    """Name of the depth camera in the scene used to render the depth images. Default is 'camera_1'.
+    
+    .. note::
+        Currently the script only supports rendered depth images from the `distance_to_image_plane` annotator.
+    """
+    semantic_cam_name: str | None = "camera_0"
+    """Name of the semantic camera in the scene used to render the semantic images. Default is 'camera_0'."""
+    
     # reconstruction parameters
-    voxel_size: float = 0.05  # [m] 0.05 for matterport 0.1 for carla
-    start_idx: int = 0  # start index for reconstruction
-    max_images: Optional[int] = 1000  # maximum number of images to reconstruct, if None, all images are used
-    depth_scale: float = 1000.0  # depth scale factor
-    # semantic reconstruction
+    voxel_size: float = 0.05
+    """Voxel size for the environment reconstruction in meters.
+    
+    The voxel size determines the resolution of the reconstructed 3D environment. For Matterport scenes, 
+    a voxel size of 0.05 is recommended, while for larger multi-mesh scenes (such as carla), a voxel size should 
+    be increased (e.g. 0.1 or higher). Defualt is 0.05."""
+    max_images: int | None = 1000
+    """Maximum number of images to use for the reconstruction. If None, all images are used. Default is 1000."""
+    depth_scale: float = 1000.0
+    """Depth scale factor to convert depth values to meters. Default is 1000.0."""
     semantics: bool = True
+    """Whether to perform semantic reconstruction. 
+    
+    Requires semantic images to be present in the data_dir. Default is True."""
 
     # speed vs. memory trade-off parameters
-    point_cloud_batch_size: int = (
-        200  # 3d points of nbr images added to point cloud at once (higher values use more memory but faster)
-    )
-
-    """ Internal functions """
-
-    def get_data_path(self) -> str:
-        return os.path.join(self.data_dir, self.env)
-
-    def get_out_path(self) -> str:
-        return os.path.join(self.out_dir, self.env)
+    point_cloud_batch_size: int = 200 
+    """Batch size for point cloud generation. 
+    
+    Defines how many images are added to the pouint-cloud at once. Higher values use more memory but are faster. Default is 200."""

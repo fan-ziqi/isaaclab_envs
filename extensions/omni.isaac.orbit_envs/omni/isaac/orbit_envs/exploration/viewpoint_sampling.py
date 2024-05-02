@@ -49,7 +49,7 @@ class ViewpointSampling:
         # [x, y, z, qx, qv, qz, qw]
 
         # load viewpoint samples if the exists
-        filename = f"viewoints_seed{seed}_samples{nbr_viewpoints}.pkl"
+        filename = f"viewpoints_seed{seed}_samples{nbr_viewpoints}.pkl"
         filedir = self.cfg.save_path if self.cfg.save_path else self._get_save_filedir()
         filename = os.path.join(filedir, filename)
         if os.path.isfile(filename):
@@ -110,6 +110,7 @@ class ViewpointSampling:
         print(f"[INFO] Sampled {sample_locations_count} viewpoints.")
         
         # save samples
+        os.makedirs(filedir, exist_ok=True)
         with open(filename, "wb") as f:
             pickle.dump(samples, f)
 
@@ -144,7 +145,7 @@ class ViewpointSampling:
         # define how many rounds are necessary to render all viewpoints
         num_rounds = int(np.ceil(samples.shape[0] / num_envs))
         # image_idx
-        image_idx = 0
+        image_idx = [0] * len(self.cfg.cameras)
 
         # save poses
         filedir = self.cfg.save_path if self.cfg.save_path else self._get_save_filedir()
@@ -187,7 +188,8 @@ class ViewpointSampling:
             # update scene buffers
             self.scene.update(self.sim.get_physics_dt())
             # render
-            for cam, annotator in self.cfg.cameras.items():
+            for cam_idx, curr_cam_annotator in enumerate(self.cfg.cameras.items()):
+                cam, annotator = curr_cam_annotator
                 image_data_np = self.scene.sensors[cam].data.output[annotator].cpu().numpy()
                 # filter nan
                 image_data_np[np.isnan(image_data_np)] = 0
@@ -199,20 +201,20 @@ class ViewpointSampling:
                     # semantic segmentation
                     if image_data_np.shape[-1] == 3 or image_data_np.shape[-1] == 4:
                         assert cv2.imwrite(
-                            os.path.join(filedir, cam, annotator, f"{image_idx}".zfill(4) + ".png"),
+                            os.path.join(filedir, cam, annotator, f"{image_idx[cam_idx]}".zfill(4) + ".png"),
                             cv2.cvtColor(image_data_np[idx].astype(np.uint8), cv2.COLOR_RGB2BGR),
                         )
                     # depth
                     else:
                         assert cv2.imwrite(
-                            os.path.join(filedir, cam, annotator, f"{image_idx}".zfill(4) + ".png"),
+                            os.path.join(filedir, cam, annotator, f"{image_idx[cam_idx]}".zfill(4) + ".png"),
                             np.uint16(image_data_np[idx] * self.cfg.depth_scale),
                         )
 
-                    image_idx += 1
+                    image_idx[cam_idx] += 1
 
-                    if image_idx % 100 == 0:
-                        print(f"[INFO] Rendered {image_idx} images in {(time.time() - start_time):.4f}s.")
+                    if sum(image_idx) % 100 == 0:
+                        print(f"[INFO] Rendered {sum(image_idx)} images in {(time.time() - start_time):.4f}s.")
 
     ###
     # Safe paths
