@@ -3,6 +3,9 @@
 **/build*/
 **/*.so
 
+# internal files
+intern/*
+
 # Omniverse
 **/*.dmp
 **/.thumbs

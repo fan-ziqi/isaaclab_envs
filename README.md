@@ -7,7 +7,8 @@
 
 # Omniverse Matterport3D and Unreal Engine Assets Extensions
 
-[![IsaacSim](https://img.shields.io/badge/IsaacSim-2023.1.0--hotfix.1-silver.svg)](https://docs.omniverse.nvidia.com/isaacsim/latest/overview.html)
+[![IsaacSim](https://img.shields.io/badge/IsaacSim-2023.1.1-silver.svg)](https://docs.omniverse.nvidia.com/isaacsim/latest/overview.html)
+[![Orbit](https://img.shields.io/badge/Orbit-0.3.0-silver)](https://isaac-orbit.github.io/orbit/)
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://docs.python.org/3/whatsnew/3.10.html)
 [![Linux platform](https://img.shields.io/badge/platform-linux--64-orange.svg)](https://releases.ubuntu.com/20.04/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
@@ -18,10 +19,10 @@ The extensions enable the easy loading of assets into Isaac Sim and have access 
 They are developed as part of the ViPlanner project ([Paper](https://arxiv.org/abs/2310.00982) | [Code](https://github.com/leggedrobotics/viplanner))
 and are based on the [Orbit](https://isaac-orbit.github.io/) framework.
 
-**Attention:**
-The central part of the extensions is currently updated to the latest orbit version.
-This repo contains a temporary solution sufficient for the demo script included in ViPlanner, found [here](https://github.com/leggedrobotics/viplanner/tree/main/omniverse).
-An updated version will be available soon.
+
+
+Always use the matterport raycast camera. Matterport meshes are loaded as many different meshes which is currentlt not supported in Orbit.
+Instead, the MatterportRaycaster uses the ply mesh which is a single mesh.
 
 
 ## Installation
