@@ -1,0 +1,27 @@
+[package]
+
+# Note: Semantic Versioning is used: https://semver.org/
+version = "0.1.0"
+
+# Description
+title = "Orbit Navigation Data Collectors"
+description="Extension to include Environments from Matterport and Unreal Engine with Semantic Information into Isaac Sim"
+authors =["Pascal Roth"]
+repository = "https://github.com/pascal-roth/orbit_envs"
+category = "robotics"
+keywords = ["kit", "robotics"]
+readme  = "docs/README.md"
+
+[dependencies]
+"omni.kit.uiapp" = {}
+"omni.isaac.ui" = {}
+"omni.isaac.core" = {}
+"omni.isaac.orbit" = {}
+"orbit.nav.importer" = {}
+
+# Main python module this extension provides.
+[[python.module]]
+name = "orbit.nav.collectors"
+
+[[python.module]]
+name = "orbit.nav.collectors.scripts"
