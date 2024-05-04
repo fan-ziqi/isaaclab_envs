@@ -1,7 +1,13 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 """
 Utility to convert a OBJ into USD format.
 
-This script uses the Asset Conerter importer extension from Isaac Sim (``omni.isaac.asset_converter``) to convert a
+This script uses the Asset Converter importer extension from Isaac Sim (``omni.isaac.asset_converter``) to convert a
 OBJ asset into USD format. It is designed as a convenience script for command-line use. For more
 information on the OBJ importer, see the documentation for the extension:
 https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/ext_omni_isaac_asset_converter.html
@@ -43,12 +49,10 @@ import os
 import carb
 import omni.isaac.core.utils.stage as stage_utils
 import omni.kit.app
-
 from omni.isaac.orbit.utils.assets import check_file_path
 from omni.isaac.orbit.utils.dict import print_dict
-
-from .obj_converter_cfg import ObjConverterCfg
-from .obj_converter import ObjConverter
+from orbit.nav.importer.utils.obj_converter import ObjConverter
+from orbit.nav.importer.utils.obj_converter_cfg import ObjConverterCfg
 
 
 def main():
@@ -62,7 +66,7 @@ def main():
     dest_path = args_cli.output
     if not os.path.isabs(dest_path):
         dest_path = os.path.abspath(dest_path)
-    
+
     # Create OBJ converter config
     obj_converter_cfg = ObjConverterCfg(
         asset_path=obj_path,

@@ -90,7 +90,7 @@ class TrajectorySampling:
             if selected_samples.shape[0] == 0:
                 print(f"[WARNING] No paths found with length [{min_len},{max_len}]")
                 continue
-            elif selected_samples.shape[0] < num_path:
+            if selected_samples.shape[0] < num_path:
                 print(
                     f"[WARNING] Only {selected_samples.shape[0]} paths found with length [{min_len},{max_len}] instead"
                     f" of {num_path}"

@@ -1,14 +1,21 @@
+# Copyright (c) 2024 ETH Zurich (Robotic Systems Lab)
+# Author: Pascal Roth
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 from __future__ import annotations
+
+import asyncio
 
 import carb
 import omni.kit.commands
 import omni.usd
 from omni.isaac.core.utils.extensions import enable_extension
-from pxr import Usd
-import asyncio
-
+from omni.isaac.orbit.sim import SimulationCfg, SimulationContext
 from omni.isaac.orbit.sim.converters.asset_converter_base import AssetConverterBase
-from omni.isaac.orbit.sim import SimulationContext, SimulationCfg
+from pxr import Usd
+
 from .obj_converter_cfg import ObjConverterCfg
 
 # Enable asset converter extension
@@ -68,7 +75,7 @@ class ObjConverter(AssetConverterBase):
         print("START CONVERSION")
         asyncio.ensure_future(self.convert_asset_to_usd)
 
-        #init the simulation context
+        # init the simulation context
         print("START RENDERING")
         sim = SimulationCfg(SimulationContext())
         while not self.success:
@@ -82,14 +89,14 @@ class ObjConverter(AssetConverterBase):
         source_layer = stage.GetRootLayer()
         omni.usd.resolve_paths(source_layer.identifier, source_layer.identifier)
         stage.Save()
-    
+
     async def convert_asset_to_usd(self):
         # get config
         print("GET CONFIG")
         import_config = self._get_obj_import_config(self.cfg)
-        
+
         # set task
-        print("CREATE CONVETER TASK")
+        print("CREATE CONVERTER TASK")
         task = self.task_manager.create_converter_task(self.usd_path, asset_converter_context=import_config)
         self.success = await task.wait_until_finished()
 

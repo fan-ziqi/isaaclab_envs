@@ -22,22 +22,6 @@ class TrajectorySamplingCfg(ExplorationCfg):
     height: float = 0.5
     """Height to use for the random points."""
 
-    # point filtering
-    min_height: float = 0.2
-    """Maximum height to be considered an accessible point for the robot"""
-    ground_height: float = -0.1
-    """Height of the ground plane"""
-    min_hit_rate: float = 0.8
-    """Don't use a point if the hit rate is below this value"""
-    min_avg_hit_distance: float = 0.5
-    """Don't use a point if the max hit distance is below this value"""
-    min_std_hit_distance: float = 0.5
-    """Don't use a point if the std hit distance is below this value"""
-
-    # convergence
-    conv_rate: float = 0.9
-    """Rate of faces that are covered by three different images, used to terminate the exploration"""
-
     # SAVING
     max_images: int = 2000
     """Maximum number of images recorded"""

@@ -148,10 +148,3 @@ class ExplorationCfg:
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     """Device to use for computations."""
-
-    # SAVING
-    max_images: int = 2000
-    """Maximum number of images recorded"""
-    save_path: str = "/home/pascal/viplanner/imperative_learning/data"
-    suffix: str | None = "cam_mount"
-    """Path to save the data to (directly with env name will be created)"""
