@@ -22,8 +22,6 @@ from omni.isaac.orbit.assets import AssetBaseCfg
 from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
 from omni.isaac.orbit.terrains import TerrainImporterCfg
 from omni.isaac.orbit.utils import configclass
-from orbit.nav.importer.importer import MatterportImporterCfg, UnRealImporterCfg
-from orbit.nav.importer.utils.toggleable_window import ToggleableWindow
 from omni.isaac.ui.ui_utils import (
     btn_builder,
     cb_builder,
@@ -33,6 +31,8 @@ from omni.isaac.ui.ui_utils import (
     setup_ui_headers,
     str_builder,
 )
+from orbit.nav.importer.importer import MatterportImporterCfg, UnRealImporterCfg
+from orbit.nav.importer.utils.toggleable_window import ToggleableWindow
 
 EXTENSION_NAME = "Orbit Navigation Environment Importer"
 
@@ -346,7 +346,7 @@ class OrbitNavImporterExtension(omni.ext.IExt):
                 self._input_fields["load_btn"] = btn_builder(
                     "Reset Scene", text="Reset", on_clicked_fn=self._reset_scene
                 )
-                self._input_fields["load_btn"].enabled = False                
+                self._input_fields["load_btn"].enabled = False
 
     ##
     # Shutdown Helpers

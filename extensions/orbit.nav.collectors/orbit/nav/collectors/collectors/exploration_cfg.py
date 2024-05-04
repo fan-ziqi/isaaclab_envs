@@ -10,9 +10,8 @@ from omni.isaac.orbit.assets import AssetBaseCfg, RigidObjectCfg
 from omni.isaac.orbit.scene import InteractiveSceneCfg
 from omni.isaac.orbit.sensors import patterns
 from omni.isaac.orbit.utils import configclass
-
-from orbit.nav.importer.sensors import MatterportRayCasterCameraCfg
 from orbit.nav.importer.importer import MatterportImporterCfg
+from orbit.nav.importer.sensors import MatterportRayCasterCameraCfg
 
 from .terrain_analysis_cfg import TerrainAnalysisCfg
 

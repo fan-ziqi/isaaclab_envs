@@ -4,6 +4,6 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from .importer_ext import OrbitNavImporterExtension, import_class, ImportSceneCfg
+from .importer_ext import ImportSceneCfg, OrbitNavImporterExtension, import_class
 
 __all__ = ["OrbitNavImporterExtension", "import_class", "ImportSceneCfg"]

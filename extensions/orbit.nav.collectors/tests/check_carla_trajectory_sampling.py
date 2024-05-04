@@ -34,11 +34,10 @@ from omni.isaac.orbit.scene import InteractiveSceneCfg
 from omni.isaac.orbit.sensors import CameraCfg
 from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils import configclass
-
-from orbit.nav.importer.sensors import DATA_DIR
 from orbit.nav.collectors.collectors import TrajectorySampling, TrajectorySamplingCfg
 from orbit.nav.collectors.configs import CarlaSemanticCostMapping
 from orbit.nav.importer.importer import UnRealImporterCfg
+from orbit.nav.importer.sensors import DATA_DIR
 
 """
 Main
@@ -126,7 +125,7 @@ def main():
     print("[INFO]: Setup complete...")
 
     # sample trajectories
-    samples = explorer.sample_paths([1000, 1000], [0.0, 10.0], [10.0, 20.0])
+    explorer.sample_paths([1000, 1000], [0.0, 10.0], [10.0, 20.0])
 
     print("[INFO]: Trajectories sampled and simulation will continue to render the environment...")
 

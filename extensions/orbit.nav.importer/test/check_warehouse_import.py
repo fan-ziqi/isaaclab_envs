@@ -35,8 +35,8 @@ from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
 from omni.isaac.orbit.sensors import CameraCfg, patterns
 from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils import configclass
-from orbit.nav.importer.sensors import DATA_DIR
 from orbit.nav.importer.importer import UnRealImporterCfg
+from orbit.nav.importer.sensors import DATA_DIR
 
 ##
 # Pre-defined configs

@@ -5,7 +5,7 @@
 
 ---
 
-# Omniverse Semantic Enviornment Extension
+# Omniverse Semantic Environment Extension
 
 [![IsaacSim](https://img.shields.io/badge/IsaacSim-2023.1.1-silver.svg)](https://docs.omniverse.nvidia.com/isaacsim/latest/overview.html)
 [![Orbit](https://img.shields.io/badge/Orbit-0.3.0-silver)](https://isaac-orbit.github.io/orbit/)
@@ -14,9 +14,9 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 [![License](https://img.shields.io/badge/license-BSD--3-yellow.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-Extension for omniverse isaac sim that allows to simply load environments from e.g. Matterport3D or Unreal Engine, and either use their semantic information or quickly augment them. 
+Extension for omniverse isaac sim that allows to simply load environments from e.g. Matterport3D or Unreal Engine, and either use their semantic information or quickly augment them.
 In addition, it includes tasks to quickly render images from different domains with different field of views or sample trajectories.
-It can be used either with standalone scripts or in an extension workflow using the GUI. 
+It can be used either with standalone scripts or in an extension workflow using the GUI.
 They are developed as part of the ViPlanner project ([Paper](https://arxiv.org/abs/2310.00982) | [Code](https://github.com/leggedrobotics/viplanner))
 and are based on the [Orbit](https://isaac-orbit.github.io/) framework.
 

@@ -7,8 +7,8 @@
 """Installation script for the 'orbit.nav.importer' python package."""
 
 import os
-import toml
 
+import toml
 from setuptools import setup
 
 # Obtain the extension data from the extension.toml file

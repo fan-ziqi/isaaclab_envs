@@ -39,10 +39,10 @@ from omni.isaac.orbit.scene import InteractiveSceneCfg
 from omni.isaac.orbit.sensors import CameraCfg
 from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils import configclass
-from orbit.nav.importer.sensors import DATA_DIR
 from orbit.nav.collectors.collectors import ViewpointSampling, ViewpointSamplingCfg
 from orbit.nav.collectors.configs import CarlaSemanticCostMapping
 from orbit.nav.importer.importer import UnRealImporterCfg
+from orbit.nav.importer.sensors import DATA_DIR
 
 """
 Main

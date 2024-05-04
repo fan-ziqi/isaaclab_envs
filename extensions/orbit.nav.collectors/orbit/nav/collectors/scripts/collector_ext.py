@@ -16,15 +16,6 @@ import omni.ui as ui
 from omni.isaac.orbit.assets import RigidObjectCfg
 from omni.isaac.orbit.sensors import CameraCfg, RayCasterCameraCfg, patterns
 from omni.isaac.orbit.utils import configclass
-from orbit.nav.importer.sensors import MatterportRayCasterCameraCfg
-from orbit.nav.importer.utils.toggleable_window import ToggleableWindow
-from orbit.nav.collectors.collectors import (
-    TrajectorySampling,
-    TrajectorySamplingCfg,
-    ViewpointSampling,
-    ViewpointSamplingCfg,
-)
-from orbit.nav.importer.scripts import OrbitNavImporterExtension, import_class, ImportSceneCfg
 from omni.isaac.ui.ui_utils import (
     btn_builder,
     cb_builder,
@@ -34,6 +25,19 @@ from omni.isaac.ui.ui_utils import (
     setup_ui_headers,
     str_builder,
 )
+from orbit.nav.collectors.collectors import (
+    TrajectorySampling,
+    TrajectorySamplingCfg,
+    ViewpointSampling,
+    ViewpointSamplingCfg,
+)
+from orbit.nav.importer.scripts import (
+    ImportSceneCfg,
+    OrbitNavImporterExtension,
+    import_class,
+)
+from orbit.nav.importer.sensors import MatterportRayCasterCameraCfg
+from orbit.nav.importer.utils.toggleable_window import ToggleableWindow
 
 EXTENSION_NAME = "Orbit Navigation Data Collectors"
 
@@ -124,7 +128,7 @@ class OrbitNavCollectorExtension(OrbitNavImporterExtension):
         doc_link = "https://github.com/leggedrobotics/omni_isaac_orbit"
 
         overview = (
-            "This utility is used to sample trajectories and viewpoints with the option to fast render images in the 
+            "This utility is used to sample trajectories and viewpoints with the option to fast render images in the"
             " navigation environments. The environments are imported using the `orbit.nav.importer` extension."
             "\n\nPress the 'Open in IDE' button to view the source code."
         )

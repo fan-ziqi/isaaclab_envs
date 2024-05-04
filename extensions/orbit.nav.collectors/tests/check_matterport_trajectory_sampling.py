@@ -55,7 +55,7 @@ def main():
     print("[INFO]: Setup complete...")
 
     # sample viewpoints
-    samples = explorer.sample_paths([1000], [0.0], [10.0])
+    explorer.sample_paths([1000], [0.0], [10.0])
 
     # Define simulation stepping
     sim_dt = sim.get_physics_dt()

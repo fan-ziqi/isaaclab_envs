@@ -27,8 +27,12 @@ simulation_app = app_launcher.app
 
 """Rest everything follows."""
 
-from orbit.nav.collectors.utils.environment3d_reconstruction import EnvironmentReconstruction
-from orbit.nav.collectors.utils.environment3d_reconstruction_cfg import ReconstructionCfg
+from orbit.nav.collectors.utils.environment3d_reconstruction import (
+    EnvironmentReconstruction,
+)
+from orbit.nav.collectors.utils.environment3d_reconstruction_cfg import (
+    ReconstructionCfg,
+)
 
 if __name__ == "__main__":
     cfg = ReconstructionCfg()

@@ -19,9 +19,9 @@ from omni.isaac.orbit.scene import InteractiveScene
 from omni.isaac.orbit.sensors import RayCaster, RayCasterCamera
 from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils.warp import raycast_mesh
+from omni.physx import get_physx_scene_query_interface
 from orbit.nav.importer.sensors import MatterportRayCaster, MatterportRayCasterCamera
 from orbit.nav.importer.utils.prims import get_all_meshes
-from omni.physx import get_physx_scene_query_interface
 from pxr import Gf, Usd, UsdGeom
 from scipy.spatial import KDTree
 from scipy.stats import qmc

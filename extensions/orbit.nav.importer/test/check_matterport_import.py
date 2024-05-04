@@ -33,11 +33,11 @@ from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
 from omni.isaac.orbit.sensors import patterns
 from omni.isaac.orbit.sim import SimulationContext
 from omni.isaac.orbit.utils import configclass
+from orbit.nav.importer.importer import MatterportImporterCfg
 from orbit.nav.importer.sensors import (
     MatterportRayCasterCameraCfg,
     MatterportRayCasterCfg,
 )
-from orbit.nav.importer.importer import MatterportImporterCfg
 
 ##
 # Pre-defined configs
