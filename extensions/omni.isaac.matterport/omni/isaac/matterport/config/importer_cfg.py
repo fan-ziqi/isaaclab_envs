@@ -8,8 +8,8 @@ from dataclasses import MISSING
 
 from omni.isaac.core.utils import extensions
 from omni.isaac.matterport.domains import MatterportImporter
-from omni.isaac.orbit.terrains import TerrainImporterCfg
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.lab.terrains import TerrainImporterCfg
+from omni.isaac.lab.utils import configclass
 from typing_extensions import Literal
 
 extensions.enable_extension("omni.kit.asset_converter")

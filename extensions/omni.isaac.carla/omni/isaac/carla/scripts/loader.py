@@ -26,10 +26,10 @@ from omni.isaac.core.prims import GeometryPrim
 from omni.isaac.core.simulation_context import SimulationContext
 from omni.isaac.core.utils.semantics import add_update_semantics, remove_all_semantics
 from omni.isaac.core.utils.viewports import set_camera_view
-from omni.isaac.orbit.utils.assets import ISAAC_NUCLEUS_DIR
+from omni.isaac.lab.utils.assets import ISAAC_NUCLEUS_DIR
 
-# isaac-orbit
-from omni.isaac.orbit.utils.configclass import class_to_dict
+# isaac-lab
+from omni.isaac.lab.utils.configclass import class_to_dict
 from pxr import Gf, PhysxSchema, Usd
 
 

@@ -13,7 +13,7 @@ import numpy as np
 import trimesh
 import warp as wp
 from omni.isaac.matterport.domains import DATA_DIR
-from omni.isaac.orbit.sensors.ray_caster import RayCaster
+from omni.isaac.lab.sensors.ray_caster import RayCaster
 
 if TYPE_CHECKING:
     from .raycaster_cfg import MatterportRayCasterCfg

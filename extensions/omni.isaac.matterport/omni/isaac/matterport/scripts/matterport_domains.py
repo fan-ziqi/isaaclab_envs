@@ -15,9 +15,9 @@ import torch
 from omni.isaac.matterport.domains.matterport_raycast_camera import (
     MatterportRayCasterCamera,
 )
-from omni.isaac.orbit.sensors.camera import CameraData
-from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg
-from omni.isaac.orbit.sim import SimulationContext
+from omni.isaac.lab.sensors.camera import CameraData
+from omni.isaac.lab.sensors.ray_caster import RayCasterCfg
+from omni.isaac.lab.sim import SimulationContext
 
 from .ext_cfg import MatterportExtConfig
 

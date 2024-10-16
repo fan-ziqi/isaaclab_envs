@@ -17,10 +17,10 @@ import carb
 import omni.isaac.core.utils.prims as prim_utils
 import omni.isaac.core.utils.stage as stage_utils
 
-# isaac-orbit
-import omni.isaac.orbit.sim as sim_utils
+# isaac-lab
+import omni.isaac.lab.sim as sim_utils
 from omni.isaac.core.simulation_context import SimulationContext
-from omni.isaac.orbit.terrains import TerrainImporter
+from omni.isaac.lab.terrains import TerrainImporter
 
 if TYPE_CHECKING:
     from omni.isaac.matterport.config import MatterportImporterCfg
