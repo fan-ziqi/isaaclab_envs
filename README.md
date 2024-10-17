@@ -52,8 +52,17 @@ For the Matterport extension, a GUI interface is available. To use it, start the
 ./isaaclab.sh -s
 ```
 
-Then, in the GUI, go to `Window -> Extensions` and type `Matterport` in the search bar. You should see the Matterport3D extension.
-Enable it to open the GUI interface.
+To enable your extension, follow these steps:
+
+1. **Add the search path of your repository** to the extension manager:
+    - Navigate to the extension manager using `Window` -> `Extensions`.
+    - Click on the **Hamburger Icon** (☰), then go to `Settings`.
+    - In the `Extension Search Paths`, enter the absolute path to `isaaclab_envs/extensions` and `IsaacLab/source/extensions`
+    - Click on the **Hamburger Icon** (☰), then click `Refresh`.
+
+2. **Search and enable your extension**:
+    - Type `Matterport` in the search bar, and you should see the Matterport3D extension under the `Third Party` category.
+    - Toggle it to enable your extension.
 
 To use both as part of an IsaacLab workflow, please refer to the [ViPlanner Demo](https://github.com/leggedrobotics/viplanner/tree/main/omniverse).
 
