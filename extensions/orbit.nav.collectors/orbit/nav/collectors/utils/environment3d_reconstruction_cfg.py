@@ -6,7 +6,7 @@
 
 from dataclasses import MISSING
 
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.lab.utils import configclass
 
 
 @configclass

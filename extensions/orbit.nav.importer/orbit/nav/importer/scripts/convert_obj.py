@@ -26,7 +26,7 @@ optional arguments:
 
 import argparse
 
-from omni.isaac.orbit.app import AppLauncher
+from omni.isaac.lab.app import AppLauncher
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Utility to convert a OBJ into USD format.")
@@ -49,8 +49,8 @@ import os
 import carb
 import omni.isaac.core.utils.stage as stage_utils
 import omni.kit.app
-from omni.isaac.orbit.utils.assets import check_file_path
-from omni.isaac.orbit.utils.dict import print_dict
+from omni.isaac.lab.utils.assets import check_file_path
+from omni.isaac.lab.utils.dict import print_dict
 from orbit.nav.importer.utils.obj_converter import ObjConverter
 from orbit.nav.importer.utils.obj_converter_cfg import ObjConverterCfg
 

@@ -13,7 +13,7 @@ This script demonstrates how to use the rigid objects class.
 import argparse
 
 # omni-isaac-orbit
-from omni.isaac.orbit.app import AppLauncher
+from omni.isaac.lab.app import AppLauncher
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="This script demonstrates how to use the camera sensor.")

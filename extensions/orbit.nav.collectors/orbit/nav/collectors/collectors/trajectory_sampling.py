@@ -11,8 +11,8 @@ import pickle
 import random
 
 import torch
-from omni.isaac.orbit.scene import InteractiveScene
-from omni.isaac.orbit.sim import SimulationContext
+from omni.isaac.lab.scene import InteractiveScene
+from omni.isaac.lab.sim import SimulationContext
 
 from .terrain_analysis import TerrainAnalysis
 from .trajectory_sampling_cfg import TrajectorySamplingCfg

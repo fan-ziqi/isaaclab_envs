@@ -18,7 +18,7 @@ This script demonstrates how to use the rigid objects class.
 import argparse
 
 # omni-isaac-orbit
-from omni.isaac.orbit.app import AppLauncher
+from omni.isaac.lab.app import AppLauncher
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="This script demonstrates how to use the camera sensor.")
@@ -31,8 +31,8 @@ app_launcher = AppLauncher(headless=args_cli.headless)
 simulation_app = app_launcher.app
 
 """Rest everything follows."""
-import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit.sim import SimulationContext
+import omni.isaac.lab.sim as sim_utils
+from omni.isaac.lab.sim import SimulationContext
 from orbit.nav.collectors.collectors import ViewpointSampling, ViewpointSamplingCfg
 
 """

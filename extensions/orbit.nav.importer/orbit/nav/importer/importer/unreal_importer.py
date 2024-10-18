@@ -14,8 +14,8 @@ import omni
 import omni.isaac.core.utils.prims as prim_utils
 import yaml
 from omni.isaac.core.utils.semantics import add_update_semantics, remove_all_semantics
-from omni.isaac.orbit.terrains import TerrainImporter
-from omni.isaac.orbit.utils.assets import ISAAC_NUCLEUS_DIR
+from omni.isaac.lab.terrains import TerrainImporter
+from omni.isaac.lab.utils.assets import ISAAC_NUCLEUS_DIR
 from orbit.nav.importer.utils.prims import get_all_prims_including_str, get_mesh_prims
 from pxr import Gf, UsdGeom
 

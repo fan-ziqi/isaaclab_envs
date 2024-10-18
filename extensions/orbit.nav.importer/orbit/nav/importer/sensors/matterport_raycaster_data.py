@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import torch
-from omni.isaac.orbit.sensors.ray_caster import RayCasterData
+from omni.isaac.lab.sensors.ray_caster import RayCasterData
 
 
 class MatterportRayCasterData(RayCasterData):

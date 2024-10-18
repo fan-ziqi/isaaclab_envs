@@ -14,13 +14,13 @@ import time
 
 import cv2
 import numpy as np
-import omni.isaac.orbit.utils.math as math_utils
+import omni.isaac.lab.utils.math as math_utils
 import torch
-from omni.isaac.orbit.markers import VisualizationMarkers
-from omni.isaac.orbit.markers.config import GREEN_ARROW_X_MARKER_CFG
-from omni.isaac.orbit.scene import InteractiveScene
-from omni.isaac.orbit.sensors import Camera
-from omni.isaac.orbit.sim import SimulationContext
+from omni.isaac.lab.markers import VisualizationMarkers
+from omni.isaac.lab.markers.config import GREEN_ARROW_X_MARKER_CFG
+from omni.isaac.lab.scene import InteractiveScene
+from omni.isaac.lab.sensors import Camera
+from omni.isaac.lab.sim import SimulationContext
 
 from .terrain_analysis import TerrainAnalysis
 from .viewpoint_sampling_cfg import ViewpointSamplingCfg

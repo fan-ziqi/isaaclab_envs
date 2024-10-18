@@ -12,8 +12,8 @@ import carb
 import omni.kit.commands
 import omni.usd
 from omni.isaac.core.utils.extensions import enable_extension
-from omni.isaac.orbit.sim import SimulationCfg, SimulationContext
-from omni.isaac.orbit.sim.converters.asset_converter_base import AssetConverterBase
+from omni.isaac.lab.sim import SimulationCfg, SimulationContext
+from omni.isaac.lab.sim.converters.asset_converter_base import AssetConverterBase
 from pxr import Usd
 
 from .obj_converter_cfg import ObjConverterCfg

@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.lab.utils import configclass
 
 from .exploration_cfg import ExplorationCfg
 

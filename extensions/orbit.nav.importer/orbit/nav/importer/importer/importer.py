@@ -14,10 +14,10 @@ import carb
 import numpy as np
 import omni.isaac.core.utils.prims as prim_utils
 import omni.isaac.core.utils.stage as stage_utils
-import omni.isaac.orbit.sim as sim_utils
+import omni.isaac.lab.sim as sim_utils
 import trimesh
-from omni.isaac.orbit.terrains import TerrainImporter
-from omni.isaac.orbit.utils.warp import convert_to_warp_mesh
+from omni.isaac.lab.terrains import TerrainImporter
+from omni.isaac.lab.utils.warp import convert_to_warp_mesh
 from pxr import UsdGeom
 
 if TYPE_CHECKING:

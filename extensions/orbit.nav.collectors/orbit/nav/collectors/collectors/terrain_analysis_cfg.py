@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.lab.utils import configclass
 from orbit.nav.collectors.configs import MatterportSemanticCostMapping
 
 

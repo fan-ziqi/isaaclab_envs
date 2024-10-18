@@ -11,11 +11,11 @@ import carb
 import omni
 import omni.client
 import omni.ext
-import omni.isaac.orbit.sim as sim_utils
+import omni.isaac.lab.sim as sim_utils
 import omni.ui as ui
-from omni.isaac.orbit.assets import RigidObjectCfg
-from omni.isaac.orbit.sensors import CameraCfg, RayCasterCameraCfg, patterns
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.lab.assets import RigidObjectCfg
+from omni.isaac.lab.sensors import CameraCfg, RayCasterCameraCfg, patterns
+from omni.isaac.lab.utils import configclass
 from omni.isaac.ui.ui_utils import (
     btn_builder,
     cb_builder,

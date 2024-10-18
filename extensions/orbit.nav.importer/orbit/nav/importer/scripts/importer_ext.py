@@ -16,12 +16,12 @@ import omni
 import omni.client
 import omni.ext
 import omni.isaac.core.utils.stage as stage_utils
-import omni.isaac.orbit.sim as sim_utils
+import omni.isaac.lab.sim as sim_utils
 import omni.ui as ui
-from omni.isaac.orbit.assets import AssetBaseCfg
-from omni.isaac.orbit.scene import InteractiveScene, InteractiveSceneCfg
-from omni.isaac.orbit.terrains import TerrainImporterCfg
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.lab.assets import AssetBaseCfg
+from omni.isaac.lab.scene import InteractiveScene, InteractiveSceneCfg
+from omni.isaac.lab.terrains import TerrainImporterCfg
+from omni.isaac.lab.utils import configclass
 from omni.isaac.ui.ui_utils import (
     btn_builder,
     cb_builder,
@@ -209,18 +209,18 @@ class OrbitNavImporterExtension(omni.ext.IExt):
                 def check_file_type(model=None):
                     path = model.get_value_as_string()
                     if is_mesh_file(path, self._allowed_ext):
-                        self._input_fields["load_btn"].enabled = True
+                        # self._input_fields["load_btn"].enabled = True
                         if self._mesh_origin == "matterport":
                             self._make_ply_proposal(path)
                     else:
-                        self._input_fields["load_btn"].enabled = False
+                        # self._input_fields["load_btn"].enabled = False
                         carb.log_warn(f"Invalid path to {self._allowed_ext} file: {path}")
 
                 if self._mesh_origin == "generator":
                     # get the module and class name of the terrain generator
                     self._input_fields["module_name"] = str_builder(
                         label="Module Name",
-                        default_val="omni.isaac.orbit.terrains.config.rough",
+                        default_val="omni.isaac.lab.terrains.config.rough",
                         tooltip="Module name of the terrain generator",
                     )
                     self._input_fields["class_name"] = str_builder(
@@ -342,11 +342,11 @@ class OrbitNavImporterExtension(omni.ext.IExt):
                 self._input_fields["load_btn"] = btn_builder(
                     "Load Scene", text="Load", on_clicked_fn=self._start_loading
                 )
-                self._input_fields["load_btn"].enabled = False
+                # self._input_fields["load_btn"].enabled = False
                 self._input_fields["load_btn"] = btn_builder(
                     "Reset Scene", text="Reset", on_clicked_fn=self._reset_scene
                 )
-                self._input_fields["load_btn"].enabled = False
+                # self._input_fields["load_btn"].enabled = False
 
     ##
     # Shutdown Helpers
@@ -483,7 +483,7 @@ class OrbitNavImporterExtension(omni.ext.IExt):
         asyncio.ensure_future(self.load_scene())
 
         # disable reloading
-        self._input_fields["load_btn"].enabled = False
+        # self._input_fields["load_btn"].enabled = False
 
     def _reset_scene(self):
         # create a new stage
@@ -491,4 +491,4 @@ class OrbitNavImporterExtension(omni.ext.IExt):
         # remove the scene
         self.scene = None
         # enable reloading
-        self._input_fields["load_btn"].enabled = True
+        # self._input_fields["load_btn"].enabled = True

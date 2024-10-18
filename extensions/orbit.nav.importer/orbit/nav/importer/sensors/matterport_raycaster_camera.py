@@ -12,13 +12,13 @@ from typing import ClassVar
 
 import carb
 import numpy as np
-import omni.isaac.orbit.utils.math as math_utils
+import omni.isaac.lab.utils.math as math_utils
 import pandas as pd
 import torch
 import trimesh
 import warp as wp
-from omni.isaac.orbit.sensors import RayCasterCamera, RayCasterCameraCfg
-from omni.isaac.orbit.utils.warp import raycast_mesh
+from omni.isaac.lab.sensors import RayCasterCamera, RayCasterCameraCfg
+from omni.isaac.lab.utils.warp import raycast_mesh
 from orbit.nav.importer.sensors import DATA_DIR
 from tensordict import TensorDict
 
@@ -52,7 +52,7 @@ class MatterportRayCasterCamera(RayCasterCamera):
                 f"RayCasterCamera class does not support the following sensor types: {common_elements}."
                 "\n\tThis is because these sensor types cannot be obtained in a fast way using ''warp''."
                 "\n\tHint: If you need to work with these sensor types, we recommend using the USD camera"
-                " interface from the omni.isaac.orbit.sensors.camera module."
+                " interface from the omni.isaac.lab.sensors.camera module."
             )
 
     def _initialize_impl(self):

@@ -14,8 +14,8 @@ import omni.kit.app
 import omni.kit.commands
 import omni.ui
 import omni.usd
-from omni.isaac.orbit.scene import InteractiveScene
-from omni.isaac.orbit.sim import SimulationContext
+from omni.isaac.lab.scene import InteractiveScene
+from omni.isaac.lab.sim import SimulationContext
 from omni.kit.window.extensions import SimpleCheckBox
 
 

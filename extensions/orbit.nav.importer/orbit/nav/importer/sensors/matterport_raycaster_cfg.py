@@ -4,8 +4,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from omni.isaac.orbit.sensors.ray_caster import RayCasterCfg
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.lab.sensors.ray_caster import RayCasterCfg
+from omni.isaac.lab.utils import configclass
 
 from .matterport_raycaster import MatterportRayCaster
 

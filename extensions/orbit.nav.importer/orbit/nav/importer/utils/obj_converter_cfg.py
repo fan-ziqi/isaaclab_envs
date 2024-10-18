@@ -4,10 +4,10 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from omni.isaac.orbit.sim.converters.asset_converter_base_cfg import (
+from omni.isaac.lab.sim.converters.asset_converter_base_cfg import (
     AssetConverterBaseCfg,
 )
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.lab.utils import configclass
 
 
 @configclass

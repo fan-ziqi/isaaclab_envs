@@ -54,7 +54,7 @@ TODO: (@pascal-roth) include images of the different extensions
 <details>
     <summary><strong>``generated``</strong></summary>
 
-    The Orbit Framework allows to generate environments and randomize their parameters. Also these environments can be used. To do so, define the ``module`` (e.g. ``omni.isaac.orbit.terrains.config.rough``) and the config ``class`` (e.g. ``ROUGH_TERRAINS_CFG``). In addition, some terrain parameters can be set for deploying a robot on the terrain.
+    The Orbit Framework allows to generate environments and randomize their parameters. Also these environments can be used. To do so, define the ``module`` (e.g. ``omni.isaac.lab.terrains.config.rough``) and the config ``class`` (e.g. ``ROUGH_TERRAINS_CFG``). In addition, some terrain parameters can be set for deploying a robot on the terrain.
 
     **Semantic Domain** The semantic domain for such meshes is currently not supported.
 

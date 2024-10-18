@@ -4,12 +4,12 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import omni.isaac.orbit.sim as sim_utils
+import omni.isaac.lab.sim as sim_utils
 import torch
-from omni.isaac.orbit.assets import AssetBaseCfg, RigidObjectCfg
-from omni.isaac.orbit.scene import InteractiveSceneCfg
-from omni.isaac.orbit.sensors import patterns
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.lab.assets import AssetBaseCfg, RigidObjectCfg
+from omni.isaac.lab.scene import InteractiveSceneCfg
+from omni.isaac.lab.sensors import patterns
+from omni.isaac.lab.utils import configclass
 from orbit.nav.importer.importer import MatterportImporterCfg
 from orbit.nav.importer.sensors import MatterportRayCasterCameraCfg
 
