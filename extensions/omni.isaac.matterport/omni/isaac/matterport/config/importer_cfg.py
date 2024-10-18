@@ -74,7 +74,7 @@ class MatterportImporterCfg(TerrainImporterCfg):
     All sub-terrains are imported relative to this prim path.
     """
 
-    obj_filepath: str = MISSING
+    obj_filepath: str = ""
 
     asset_converter: AssetConverterContext = asset_converter_cfg
 
